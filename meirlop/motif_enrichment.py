@@ -107,6 +107,8 @@ def append_shuffled_permuted_peak_data(peak_data_df,
 
     get_shuf_colname  = lambda shuf: peak_data_shufs_df.columns[0]+shuf_suffix+str(shuf)
     peak_data_common_cols = [peak_data_shufs_df.columns[0]] + [score_col] + batch_cols
+    print([get_shuf_colname(0)])
+    print(peak_data_common_cols)
     print([get_shuf_colname(0)] + peak_data_common_cols)
     get_shuf_sub_df = lambda shuf: peak_data_shufs_df[peak_data_common_cols + [get_shuf_colname(shuf)]]
 
