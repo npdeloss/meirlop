@@ -25,7 +25,9 @@ def analyze_peaks_with_prerank(peak_score_df,
     peak_data_df = peak_score_df.merge(peak_strata_df)
     peak_id_col = peak_data_df.columns[0]
     peak_score_col = peak_data_df.columns[1]
-    peak_batch_cols = peak_strata_df.columns[1:]
+    peak_batch_cols = list(peak_strata_df.columns[1:])
+    print(peak_score_col)
+    print(peak_batch_cols)
     peak_data_df = peak_data_df.sort_values(by = peak_score_col, ascending = False)
 
     peak_id_to_peak_idx = {v:i for i, v in enumerate(set(list(peak_data_df[peak_id_col])))}
