@@ -40,7 +40,10 @@ def analyze_peaks_with_prerank(peak_score_df,
                                in peak_set_dict.items()}
 
     peak_data_df[peak_id_col] = peak_data_df[peak_id_col].map(peak_id_to_peak_idx)
-
+    start = timer()
+    print(datetime.datetime.now())
+    print('Permuting peak data')
+    print(peak_data_df.shape)
     shuffled_permuted_peak_data = append_shuffled_permuted_peak_data(peak_data_df,
                                                                      score_col = peak_score_col,
                                                                      batch_cols = peak_batch_cols,
@@ -49,7 +52,13 @@ def analyze_peaks_with_prerank(peak_score_df,
                                                                      rs = rs,
                                                                      n_jobs = n_jobs,
                                                                      progress_wrapper = progress_wrapper)
+                                                                     end = timer()
+    runtime = end - start
+    print(f'{runtime} seconds')
+    print(datetime.datetime.now())
+    print('Permuted peak data')
     peak_data_shuf_df, peak_id_cols, null_perm_mask_vector = shuffled_permuted_peak_data
+    print(peak_data_shuf_df.shape)
     peak_data_shuf_df = peak_data_shuf_df.sort_values(by = score_col, ascending = False)
     correl_vector = np.abs(peak_data_shuf_df[peak_score_col].values)
 
