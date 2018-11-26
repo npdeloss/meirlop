@@ -43,7 +43,7 @@ def get_background(seq, alphabet = 'ACGT', as_counts = False):
     return bg
 
 def get_motif_matrices(motifs_filename):
-    motifs_bs = jaspar.read(open(known_motifs_filename, 'r'), format = 'jaspar')
+    motifs_bs = jaspar.read(open(motifs_filename, 'r'), format = 'jaspar')
     motif_matrix_dict = {f'{motif.matrix_id} {motif.name}':
                          np.array([list(motif.pwm[nuc])
                                    for nuc
@@ -151,5 +151,5 @@ def format_scan_results(scan_results, dedup_strands = True):
     motif_peak_set_dict = {motif_id: list(sorted(set(group['peak_id'])))
                            for motif_id, group
                            in scan_results_df.groupby('motif_id')}
-    
+
     return scan_results_df, motif_peak_set_dict
