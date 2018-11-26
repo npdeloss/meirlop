@@ -26,8 +26,8 @@ def analyze_peaks_with_prerank(peak_score_df,
     peak_id_col = peak_data_df.columns[0]
     peak_score_col = peak_data_df.columns[1]
     peak_batch_cols = list(peak_strata_df.columns[1:])
-    print(peak_score_col)
-    print(peak_batch_cols)
+
+
     peak_data_df = peak_data_df.sort_values(by = peak_score_col, ascending = False)
 
     peak_id_to_peak_idx = {v:i for i, v in enumerate(set(list(peak_data_df[peak_id_col])))}
@@ -47,7 +47,8 @@ def analyze_peaks_with_prerank(peak_score_df,
                                                                      nperm = nperm,
                                                                      nshuf = nshuf,
                                                                      rs = rs,
-                                                                     n_jobs = n_jobs)
+                                                                     n_jobs = n_jobs,
+                                                                     progress_wrapper = progress_wrapper)
     peak_data_shuf_df, peak_id_cols, null_perm_mask_vector = shuffled_permuted_peak_data
     peak_data_shuf_df = peak_data_shuf_df.sort_values(by = score_col, ascending = False)
     correl_vector = np.abs(peak_data_shuf_df[peak_score_col].values)
@@ -97,7 +98,8 @@ def append_shuffled_permuted_peak_data(peak_data_df,
                                        shuf_suffix = '_shuf_',
                                        nshuf = 100,
                                        rs = np.random.RandomState(),
-                                       n_jobs = 1):
+                                       n_jobs = 1,
+                                       progress_wrapper = tqdm):
 
     # Shuffle to account for ties
     peak_data_shufs_df = append_peak_id_perms_batched(peak_data_df,
@@ -109,9 +111,9 @@ def append_shuffled_permuted_peak_data(peak_data_df,
 
     get_shuf_colname  = lambda shuf: peak_data_shufs_df.columns[0]+shuf_suffix+str(shuf)
     peak_data_common_cols = [peak_data_shufs_df.columns[0]] + [score_col] + batch_cols
-    print([get_shuf_colname(0)])
-    print(peak_data_common_cols)
-    print([get_shuf_colname(0)] + peak_data_common_cols)
+
+
+
     get_shuf_sub_df = lambda shuf: peak_data_shufs_df[peak_data_common_cols + [get_shuf_colname(shuf)]]
 
     # Permute, accounting for strata. Only shuffle within strata
@@ -121,9 +123,9 @@ def append_shuffled_permuted_peak_data(peak_data_df,
                                                                        nperm = nperm,
                                                                        rs = rs,
                                                                        n_jobs = n_jobs)
-    peak_data_perms_dfs = [permute_peak_data_shuf(shuf) for shuf in range(nshuf)]
+    peak_data_perms_dfs = [permute_peak_data_shuf(shuf) for shuf in progress_wrapper(range(nshuf))]
     merge_and_set_index = lambda shuf: get_shuf_sub_df(shuf).merge(peak_data_perms_dfs[shuf]).set_index(peak_data_common_cols)
-    peak_data_perm_df = pd.concat([merge_and_set_index(shuf) for shuf in range(nshuf)], axis = 1)
+    peak_data_perm_df = pd.concat([merge_and_set_index(shuf) for shuf in progress_wrapper(range(nshuf))], axis = 1)
 
     # Merge with original data
     peak_data_with_null_perms_and_shufs_df = peak_data_df.merge(peak_data_perm_df.reset_index())
