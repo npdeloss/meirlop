@@ -19,10 +19,11 @@ def analyze_peaks_with_prerank(peak_score_df,
                                max_set_size = np.inf,
                                rs = np.random.RandomState(),
                                n_jobs = 1,
-                               tqdm = tqdm):
+                               progress_wrapper = tqdm):
     peak_data_df = peak_score_df.merge(peak_strata_df)
     peak_id_col = peak_data_df.columns[0]
     peak_score_col = peak_data_df.columns[1]
+    peak_batch_cols = peak_strata_df.columns[1:]
     peak_data_df = peak_data_df.sort_values(by = peak_score_col, ascending = False)
 
     peak_id_to_peak_idx = {v:i for i, v in enumerate(set(list(peak_data_df[peak_id_col])))}
@@ -37,8 +38,8 @@ def analyze_peaks_with_prerank(peak_score_df,
     peak_data_df[peak_id_col] = peak_data_df[peak_id_col].map(peak_id_to_peak_idx)
 
     shuffled_permuted_peak_data = append_shuffled_permuted_peak_data(peak_data_df,
-                                                                     score_col = score_col,
-                                                                     batch_cols = batch_cols,
+                                                                     score_col = peak_score_col,
+                                                                     batch_cols = peak_batch_cols,
                                                                      nperm = nperm,
                                                                      nshuf = nshuf,
                                                                      rs = rs,
@@ -55,7 +56,7 @@ def analyze_peaks_with_prerank(peak_score_df,
                                                             peak_idx_matrix,
                                                             null_perm_mask_vector,
                                                             n_jobs,
-                                                            tqdm)
+                                                            progress_wrapper)
     enrichment_score_results_df['fdr_sig'] = (enrichment_score_results_df['fdr'] < 0.05).astype(int)
     enrichment_score_results_df['abs_nes'] = np.abs(enrichment_score_results_df['nes'])
     enrichment_score_results_df = enrichment_score_results_df.sort_values(by = ['fdr_sig', 'abs_nes'], ascending = False).reset_index(drop = True)
@@ -129,7 +130,7 @@ def append_shuffled_permuted_peak_data(peak_data_df,
 
     return peak_data_with_null_perms_and_shufs_df, peak_id_cols, null_perm_mask_vector
 
-def compute_enrichment_scores(motif_peak_idx_set_dict, min_set_size, max_set_size, correl_vector, peak_idx_matrix, null_perm_mask_vector, n_jobs, tqdm = tqdm):
+def compute_enrichment_scores(motif_peak_idx_set_dict, min_set_size, max_set_size, correl_vector, peak_idx_matrix, null_perm_mask_vector, n_jobs, progress_wrapper = tqdm):
 
     get_tag_indicator_for_motif_id = lambda motif_id: get_tag_indicator_from_peak_idx_set_parallel(motif_peak_idx_set_dict[motif_id],
                                                                                                    peak_idx_matrix,
@@ -151,7 +152,7 @@ def compute_enrichment_scores(motif_peak_idx_set_dict, min_set_size, max_set_siz
                                in motif_peak_idx_set_dict.keys()
                                if (min_set_size <= len(set(peak_set_dict[motif_id]))) and (len(set(peak_set_dict[motif_id])) <= max_set_size)]
 
-    enrichment_score_results_tups_tmp = [get_enrichment_score_result_tup(motif_id) for motif_id in tqdm(motif_ids_in_size_limit)]
+    enrichment_score_results_tups_tmp = [get_enrichment_score_result_tup(motif_id) for motif_id in progress_wrapper(motif_ids_in_size_limit)]
     null_nes_vec = np.array([null_nes for result in enrichment_score_results_tups_tmp for null_nes in result[-1]])
     pos_null_nes_vec = null_nes_vec[np.where(null_nes_vec >= 0)]
     neg_null_nes_vec = null_nes_vec[np.where(null_nes_vec < 0)]
@@ -160,8 +161,8 @@ def compute_enrichment_scores(motif_peak_idx_set_dict, min_set_size, max_set_siz
     get_fdr_for_pos_nes = lambda nes: (np.sum(np.where(nes > pos_null_nes_vec, 0, 1))/pos_null_nes_vec.size, np.sum(np.where(nes > pos_null_nes_vec, 0, 1)))
     get_fdr_for_neg_nes = lambda nes: (np.sum(np.where(nes < neg_null_nes_vec, 0, 1))/neg_null_nes_vec.size, np.sum(np.where(nes < neg_null_nes_vec, 0, 1)))
     get_fdr_for_nes = lambda nes: get_fdr_for_pos_nes(nes) if nes >= 0 else get_fdr_for_neg_nes(nes)
-    fdrs = [get_fdr_for_nes(nes) for nes in tqdm(nes_vec)]
-    enrichment_score_results_tups = [tup[:-1] + (fdrs[i]) for i, tup in tqdm(enumerate(enrichment_score_results_tups_tmp))]
+    fdrs = [get_fdr_for_nes(nes) for nes in progress_wrapper(nes_vec)]
+    enrichment_score_results_tups = [tup[:-1] + (fdrs[i]) for i, tup in progress_wrapper(enumerate(enrichment_score_results_tups_tmp))]
 
     del enrichment_score_results_tups_tmp
     del null_nes_vec
