@@ -17,7 +17,9 @@ def analyze_peaks_with_prerank(peak_score_df,
                                peak_strata_df,
                                min_set_size = 1,
                                max_set_size = np.inf,
-                               rs = np.random.RandomState(),
+                               nperm = 10,
+                               nshuf = 100,
+                               rs = np.random.RandomState(), 
                                n_jobs = 1,
                                progress_wrapper = tqdm):
     peak_data_df = peak_score_df.merge(peak_strata_df)
