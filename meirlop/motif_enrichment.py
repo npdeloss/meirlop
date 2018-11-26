@@ -5,6 +5,9 @@ from joblib import Parallel, delayed
 
 from tqdm import tqdm
 
+import datetime
+from timeit import default_timer as timer
+
 # def analyze_peaks_with_lr(peak_score_df,
 #                           peak_set_dict,
 #                           peak_covariates_df,
@@ -52,7 +55,7 @@ def analyze_peaks_with_prerank(peak_score_df,
                                                                      rs = rs,
                                                                      n_jobs = n_jobs,
                                                                      progress_wrapper = progress_wrapper)
-                                                                     end = timer()
+    end = timer()
     runtime = end - start
     print(f'{runtime} seconds')
     print(datetime.datetime.now())
