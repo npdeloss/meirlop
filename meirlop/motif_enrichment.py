@@ -32,7 +32,7 @@ def analyze_peaks_with_prerank(peak_score_df,
                                           for peak_id
                                           in peak_ids}
                                for motif_id, peak_ids
-                               in motif_peak_set_dict.items()}
+                               in peak_set_dict.items()}
 
     peak_data_df[peak_id_col] = peak_data_df[peak_id_col].map(peak_id_to_peak_idx)
 
@@ -149,7 +149,7 @@ def compute_enrichment_scores(motif_peak_idx_set_dict, min_set_size, max_set_siz
     motif_ids_in_size_limit = [motif_id
                                for motif_id
                                in motif_peak_idx_set_dict.keys()
-                               if (min_set_size <= len(set(motif_peak_set_dict[motif_id]))) and (len(set(motif_peak_set_dict[motif_id])) <= max_set_size)]
+                               if (min_set_size <= len(set(peak_set_dict[motif_id]))) and (len(set(peak_set_dict[motif_id])) <= max_set_size)]
 
     enrichment_score_results_tups_tmp = [get_enrichment_score_result_tup(motif_id) for motif_id in tqdm(motif_ids_in_size_limit)]
     null_nes_vec = np.array([null_nes for result in enrichment_score_results_tups_tmp for null_nes in result[-1]])
