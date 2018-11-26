@@ -6,14 +6,14 @@ from joblib import Parallel, delayed
 from tqdm import tqdm
 
 # def analyze_peaks_with_lr(peak_score_df,
-#                           peak_sets_dict,
+#                           peak_set_dict,
 #                           peak_covariates_df,
 #                           min_set_size = 1,
 #                           max_set_size = np.inf,
 #                           n_jobs = 1):
 
 def analyze_peaks_with_prerank(peak_score_df,
-                               peak_sets_dict,
+                               peak_set_dict,
                                peak_strata_df,
                                min_set_size = 1,
                                max_set_size = np.inf,
