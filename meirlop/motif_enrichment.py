@@ -19,7 +19,7 @@ def analyze_peaks_with_prerank(peak_score_df,
                                max_set_size = np.inf,
                                nperm = 10,
                                nshuf = 100,
-                               rs = np.random.RandomState(), 
+                               rs = np.random.RandomState(),
                                n_jobs = 1,
                                progress_wrapper = tqdm):
     peak_data_df = peak_score_df.merge(peak_strata_df)
@@ -107,6 +107,7 @@ def append_shuffled_permuted_peak_data(peak_data_df,
 
     get_shuf_colname  = lambda shuf: peak_data_shufs_df.columns[0]+shuf_suffix+str(shuf)
     peak_data_common_cols = [peak_data_shufs_df.columns[0]] + [score_col] + batch_cols
+    print([get_shuf_colname(shuf)] + peak_data_common_cols)
     get_shuf_sub_df = lambda shuf: peak_data_shufs_df[peak_data_common_cols + [get_shuf_colname(shuf)]]
 
     # Permute, accounting for strata. Only shuffle within strata
