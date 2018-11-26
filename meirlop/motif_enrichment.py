@@ -18,7 +18,8 @@ def analyze_peaks_with_prerank(peak_score_df,
                                min_set_size = 1,
                                max_set_size = np.inf,
                                rs = np.random.RandomState(),
-                               n_jobs = 1):
+                               n_jobs = 1,
+                               tqdm = tqdm):
     peak_data_df = peak_score_df.merge(peak_strata_df)
     peak_id_col = peak_data_df.columns[0]
     peak_score_col = peak_data_df.columns[1]
@@ -53,7 +54,8 @@ def analyze_peaks_with_prerank(peak_score_df,
                                                             correl_vector,
                                                             peak_idx_matrix,
                                                             null_perm_mask_vector,
-                                                            n_jobs)
+                                                            n_jobs,
+                                                            tqdm)
     enrichment_score_results_df['fdr_sig'] = (enrichment_score_results_df['fdr'] < 0.05).astype(int)
     enrichment_score_results_df['abs_nes'] = np.abs(enrichment_score_results_df['nes'])
     enrichment_score_results_df = enrichment_score_results_df.sort_values(by = ['fdr_sig', 'abs_nes'], ascending = False).reset_index(drop = True)
@@ -127,7 +129,7 @@ def append_shuffled_permuted_peak_data(peak_data_df,
 
     return peak_data_with_null_perms_and_shufs_df, peak_id_cols, null_perm_mask_vector
 
-def compute_enrichment_scores(motif_peak_idx_set_dict, min_set_size, max_set_size, correl_vector, peak_idx_matrix, null_perm_mask_vector, n_jobs):
+def compute_enrichment_scores(motif_peak_idx_set_dict, min_set_size, max_set_size, correl_vector, peak_idx_matrix, null_perm_mask_vector, n_jobs, tqdm = tqdm):
 
     get_tag_indicator_for_motif_id = lambda motif_id: get_tag_indicator_from_peak_idx_set_parallel(motif_peak_idx_set_dict[motif_id],
                                                                                                    peak_idx_matrix,
