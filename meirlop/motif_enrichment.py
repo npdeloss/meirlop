@@ -152,6 +152,62 @@ def append_shuffled_permuted_peak_data(peak_data_df,
 
     return peak_data_with_null_perms_and_shufs_df, peak_id_cols, null_perm_mask_vector
 
+def compute_enrichment_score(tag_indicator, correl_vector, null_perm_mask_vector, weighted_score_type = 1, scale = False, single = False):
+    weighted_abs_correl_vector = np.abs(correl_vector) ** weighted_score_type
+
+    axis = 1
+
+    no_tag_indicator = 1 - tag_indicator
+
+    n = len(correl_vector)
+    n_hit = np.sum(tag_indicator, axis=axis)
+    n_miss = n - n_hit
+
+    sum_correl_tag = np.sum(weighted_abs_correl_vector * tag_indicator, axis=axis)
+
+    norm_tag =  1.0/sum_correl_tag
+    norm_no_tag = 1.0/n_miss
+
+    res = np.cumsum(((tag_indicator * weighted_abs_correl_vector).T * norm_tag).T - (no_tag_indicator.T * norm_no_tag).T, axis=axis)
+    
+    if scale:
+        res = res / n
+    if single:
+        es_vec = res.sum(axis = axis)
+    else:
+        max_es, min_es =  res.max(axis=axis), res.min(axis=axis)
+        es_vec = np.where(np.abs(max_es) > np.abs(min_es), max_es, min_es)
+
+    alt_es_vec = es_vec[np.where(1 - null_perm_mask_vector)]
+    avg_es = np.average(alt_es_vec)
+
+    null_es_vec = es_vec[np.where(null_perm_mask_vector)]
+
+    pos_null_es_vec = null_es_vec[np.where(null_es_vec >= 0)]
+    neg_null_es_vec = null_es_vec[np.where(null_es_vec < 0)]
+
+    inv_avg_pos_null_es_vec = 1 / np.average(pos_null_es_vec) if len(pos_null_es_vec) > 0 else 0
+    inv_avg_neg_null_es_vec = 1 / np.average(neg_null_es_vec) if len(neg_null_es_vec) > 0 else 0
+
+    nes_vec = np.where(es_vec >= 0, es_vec * inv_avg_pos_null_es_vec, -es_vec * inv_avg_neg_null_es_vec)
+
+    alt_nes_vec = nes_vec[np.where(1 - null_perm_mask_vector)]
+    null_nes_vec = nes_vec[np.where(null_perm_mask_vector)]
+
+    avg_nes = np.average(alt_nes_vec)
+
+    upper_n_more_extreme = np.sum(np.where(avg_es > pos_null_es_vec, 0, 1))
+    lower_n_more_extreme = np.sum(np.where(avg_es < neg_null_es_vec, 0, 1))
+
+
+    upper_nom_pval = upper_n_more_extreme / pos_null_es_vec.size
+    lower_nom_pval = lower_n_more_extreme / neg_null_es_vec.size
+
+    n_more_extreme = upper_n_more_extreme if avg_es >= 0 else lower_n_more_extreme
+    nom_pval = upper_nom_pval if avg_es >= 0 else lower_nom_pval
+
+    return avg_es, avg_nes, nom_pval, n_more_extreme, alt_es_vec, null_es_vec, alt_nes_vec, null_nes_vec, res
+
 def compute_enrichment_scores(motif_peak_idx_set_dict, min_set_size, max_set_size, correl_vector, peak_idx_matrix, null_perm_mask_vector, n_jobs, progress_wrapper = tqdm):
 
     get_tag_indicator_for_motif_id = lambda motif_id: get_tag_indicator_from_peak_idx_set_parallel(motif_peak_idx_set_dict[motif_id],
