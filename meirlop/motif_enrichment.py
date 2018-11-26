@@ -114,6 +114,7 @@ def append_shuffled_permuted_peak_data(peak_data_df,
                                        progress_wrapper = tqdm):
 
     # Shuffle to account for ties
+    # print(nperm, nshuf, n_jobs)
     peak_data_shufs_df = append_peak_id_perms_batched(peak_data_df,
                                                       batch_cols = [score_col],
                                                       suffix = shuf_suffix,
