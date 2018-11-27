@@ -53,7 +53,7 @@ def get_centered_peak_sequences(peaks_df,
         return feature
 
     genome_fa_dict, genome_fa_chromsizes_dict = read_fasta(genome_fa_file, chromsizes = True)
-    genome_fa_bt = BedTool(genome_fa_filename)
+    genome_fa_bt = BedTool(genome_fa_file)
     peaks_df_cp = peaks_df.copy()
     start_colname = peak_bed_columns[1]
     peaks_df_cp[start_colname] = peaks_df_cp[start_colname] + start_offset
