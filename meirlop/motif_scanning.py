@@ -23,25 +23,6 @@ def get_scored_sequence_dict(fasta_filename, description_delim = ' '):
                   in description_dict.items()}
     return sequence_dict, score_dict, description_dict
 
-def get_background(seq, alphabet = 'ACGT', as_counts = False):
-    counts = {nuc: 0
-              for nuc
-              in list(alphabet)}
-    for nuc in list(seq):
-        if nuc in counts:
-            counts[nuc] = counts[nuc] + 1
-    if as_counts:
-        counts_list = [counts[nuc]
-                       for nuc
-                       in list(alphabet)]
-        return counts_list
-    total = sum(counts.values())
-    bg = tuple([counts[nuc]/total
-                for nuc
-                in alphabet])
-
-    return bg
-
 def get_motif_matrices(motifs_filename):
     motifs_bs = jaspar.read(open(motifs_filename, 'r'), format = 'jaspar')
     motif_matrix_dict = {f'{motif.matrix_id} {motif.name}':
