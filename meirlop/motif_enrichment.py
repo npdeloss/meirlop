@@ -169,7 +169,7 @@ def compute_enrichment_score(tag_indicator, correl_vector, null_perm_mask_vector
     norm_no_tag = 1.0/n_miss
 
     res = np.cumsum(((tag_indicator * weighted_abs_correl_vector).T * norm_tag).T - (no_tag_indicator.T * norm_no_tag).T, axis=axis)
-    
+
     if scale:
         res = res / n
     if single:
@@ -207,6 +207,10 @@ def compute_enrichment_score(tag_indicator, correl_vector, null_perm_mask_vector
     nom_pval = upper_nom_pval if avg_es >= 0 else lower_nom_pval
 
     return avg_es, avg_nes, nom_pval, n_more_extreme, alt_es_vec, null_es_vec, alt_nes_vec, null_nes_vec, res
+
+def get_tag_indicator_from_peak_idx_set_parallel(peak_idx_set, peak_idx_matrix, n_jobs):
+    process_subarray = lambda subarray: [int(peak_idx in peak_idx_set) for peak_idx in subarray]
+    return np.array(Parallel(n_jobs=n_jobs)(delayed(process_subarray)(subarray) for subarray in peak_idx_matrix))
 
 def compute_enrichment_scores(motif_peak_idx_set_dict, min_set_size, max_set_size, correl_vector, peak_idx_matrix, null_perm_mask_vector, n_jobs, progress_wrapper = tqdm):
 
