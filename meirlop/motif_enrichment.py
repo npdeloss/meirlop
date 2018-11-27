@@ -42,7 +42,7 @@ def analyze_peaks_with_prerank(peak_score_df,
                                for motif_id, peak_ids
                                in peak_set_dict.items()}
 
-    peak_data_df[peak_id_col] = peak_data_df[peak_id_col].map(peak_id_to_peak_idx)
+    peak_data_df[peak_id_col] = peak_data_df[peak_id_col].map(peak_id_to_peak_idx).astype(int)
     # start = timer()
     # print(datetime.datetime.now())
     # print('Permuting peak data')
