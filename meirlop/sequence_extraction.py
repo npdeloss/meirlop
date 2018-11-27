@@ -1,3 +1,5 @@
+from math import ceil
+
 from Bio import SeqIO
 
 import pybedtools
