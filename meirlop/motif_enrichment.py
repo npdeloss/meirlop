@@ -9,6 +9,8 @@ import datetime
 from timeit import default_timer as timer
 
 from sklearn.preprocessing import StandardScaler
+
+import statsmodels.formula.api as sm
 from statsmodels.stats.multitest import multipletests as mt
 
 def analyze_peaks_with_lr(peak_score_df,
