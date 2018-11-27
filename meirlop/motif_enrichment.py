@@ -48,7 +48,7 @@ def preprocess_lr_df(peak_score_df, peak_covariates_df):
     ss = StandardScaler(with_mean = True, with_std = True)
     X = ss.fit_transform(peak_data_df[[peak_score_colname] + peak_covariate_colnames])
     lr_df = pd.DataFrame(X, columns = [peak_score_colname] + peak_covariate_colnames)
-    lr_df.insert(0, peak_id_col, peak_score_df[peak_id_colname])
+    lr_df.insert(0, peak_id_colname, peak_score_df[peak_id_colname])
     return lr_df
 
 def compute_logit_regression_for_peak_set(peak_set,
