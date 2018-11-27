@@ -1,4 +1,5 @@
 import pandas as pd
+import numpy as np
 
 from Bio import SeqIO
 import Bio.motifs.jaspar as jaspar
@@ -40,7 +41,7 @@ def read_scored_fasta(fasta_file, description_delim = ' '):
     sequence_dict = {rec.id: str(rec.seq)
                      for rec
                      in fasta_records}
-    description_dict = {rec.id: rec.description.split(description_delim)
+    description_dict = {rec.id: tuple(rec.description.split(description_delim))
                         for rec
                         in fasta_records}
     score_dict = {key: float(val[1])
