@@ -200,8 +200,8 @@ def compute_enrichment_score(tag_indicator, correl_vector, null_perm_mask_vector
     lower_n_more_extreme = np.sum(np.where(avg_es < neg_null_es_vec, 0, 1))
 
     print(upper_n_more_extreme, pos_null_es_vec.size, lower_n_more_extreme, neg_null_es_vec.size)
-    upper_nom_pval = upper_n_more_extreme / pos_null_es_vec.size
-    lower_nom_pval = lower_n_more_extreme / neg_null_es_vec.size
+    upper_nom_pval = 0 if pos_null_es_vec.size == 0 else upper_n_more_extreme / pos_null_es_vec.size
+    lower_nom_pval = 0 if neg_null_es_vec.size == 0 else lower_n_more_extreme / neg_null_es_vec.size
 
     n_more_extreme = upper_n_more_extreme if avg_es >= 0 else lower_n_more_extreme
     nom_pval = upper_nom_pval if avg_es >= 0 else lower_nom_pval
