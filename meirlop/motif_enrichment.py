@@ -17,7 +17,7 @@ def analyze_peaks_with_lr(peak_score_df,
                           padj_method = 'fdr_bh',
                           min_set_size = 1,
                           max_set_size = np.inf,
-                          n_jobs = n_jobs,
+                          n_jobs = 1,
                           progress_wrapper = tqdm):
 
     lr_df = preprocess_lr_df(score_df, peak_covariates_df)
