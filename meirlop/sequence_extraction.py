@@ -1,5 +1,7 @@
 from math import ceil
 
+import pandas as pd
+
 from Bio import SeqIO
 
 import pybedtools
