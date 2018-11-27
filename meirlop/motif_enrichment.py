@@ -20,7 +20,7 @@ def analyze_peaks_with_lr(peak_score_df,
                           n_jobs = 1,
                           progress_wrapper = tqdm):
 
-    lr_df = preprocess_lr_df(score_df, peak_covariates_df)
+    lr_df = preprocess_lr_df(peak_score_df, peak_covariates_df)
     peak_id_colname = lr_df.columns[0]
     score_colname = lr_df.columns[1]
     cov_colnames = list(lr_df.columns[2:])
