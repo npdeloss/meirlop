@@ -28,7 +28,7 @@ def write_fasta(sequence_dict, fasta_file):
 
 def write_scored_fasta(sequence_dict, score_dict, fasta_file, reverse = True, other_dicts = []):
     sorted_keys = sorted(list(sequence_dict.keys()),
-                         key = lambda k: score_dict[k])
+                         key = lambda k: score_dict[k], reverse = reverse)
     tups = [(key, score_dict[key]) + tuple([other_dict[key]
                                             for other_dict in other_dicts])
             for key in sorted_keys]
