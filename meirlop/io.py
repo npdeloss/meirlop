@@ -25,7 +25,7 @@ def write_fasta(sequence_dict, fasta_file):
     fasta_file.write(fasta_string)
     return fasta_string
 
-def write_scored_fasta(sequence_dict, score_dict, fasta_file, reverse = True, other_dicts = []):
+def write_scored_fasta(sequence_dict, score_dict, fasta_file, reverse = False, other_dicts = []):
     sorted_keys = sorted(list(sequence_dict.keys()),
                          key = lambda k: score_dict[k])
     tups = [(key, score_dict[key]) + tuple([other_dict[key]
@@ -48,7 +48,7 @@ def read_scored_fasta(fasta_file, description_delim = ' '):
                   in description_dict.items()}
     return sequence_dict, score_dict, description_dict
 
-def read_motif_matrices(motifs_file):
+def get_motif_matrices(motifs_file):
     motifs_bs = jaspar.read(motifs_file, format = 'jaspar')
     motif_matrix_dict = {f'{motif.matrix_id} {motif.name}':
                          np.array([list(motif.pwm[nuc])

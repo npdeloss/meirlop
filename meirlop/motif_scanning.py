@@ -23,21 +23,6 @@ def get_scored_sequence_dict(fasta_filename, description_delim = ' '):
                   in description_dict.items()}
     return sequence_dict, score_dict, description_dict
 
-def get_motif_matrices(motifs_filename):
-    motifs_bs = jaspar.read(open(motifs_filename, 'r'), format = 'jaspar')
-    motif_matrix_dict = {f'{motif.matrix_id} {motif.name}':
-                         np.array([list(motif.pwm[nuc])
-                                   for nuc
-                                   in 'ACGT'])
-                         for motif
-                         in motifs_bs}
-    motif_consensus_dict = {f'{motif.matrix_id} {motif.name}':
-                            str(motif.consensus)
-                            for motif
-                            in motifs_bs}
-
-    return motif_matrix_dict, motif_consensus_dict
-
 def get_motif_fwd_rev_matrices(motif_matrix_dict):
     motif_fwd_matrix_dict = {(motif_id, '+'): motif_matrix
                              for motif_id, motif_matrix
