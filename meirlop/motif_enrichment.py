@@ -37,7 +37,7 @@ def analyze_peaks_with_lr(peak_score_df,
 
     results_df['padj_sig'] = (results_df['padj'] < 0.05).astype(int)
     results_df['abs_coef'] = np.abs(results_df['coef'])
-    results_df = lr_results_df.sort_values(by = ['abs_coef', 'padj_sig'], ascending = False)
+    results_df = results_df.sort_values(by = ['abs_coef', 'padj_sig'], ascending = False)
 
     return result_df
 
