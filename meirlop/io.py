@@ -31,7 +31,7 @@ def write_scored_fasta(sequence_dict, score_dict, fasta_file, reverse = True, ot
     tups = [(key, score_dict[key]) + tuple([other_dict[key]
                                             for other_dict in other_dicts])
             for key in sorted_keys]
-    rekey = lambda tup: ' '.join(list(tup))
+    rekey = lambda tup: ' '.join(map(str, list(tup)))
     rekeyed_sequence_dict = {rekey(tup): sequence_dict[tup[0]] for tup in tups}
     return write_fasta(rekeyed_sequence_dict, fasta_file)
 
