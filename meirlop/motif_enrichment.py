@@ -39,7 +39,7 @@ def analyze_peaks_with_lr(peak_score_df,
 
     return result_df
 
-def preprocess_lr_df(score_df, peak_covariates_df):
+def preprocess_lr_df(peak_score_df, peak_covariates_df):
     peak_data_df = peak_score_df.merge(peak_covariates_df)
     peak_id_colname = peak_score_df.columns[0]
     peak_score_colname = peak_data_df.columns[1]
