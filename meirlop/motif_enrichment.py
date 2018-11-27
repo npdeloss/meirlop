@@ -39,7 +39,7 @@ def analyze_peaks_with_lr(peak_score_df,
     results_df['abs_coef'] = np.abs(results_df['coef'])
     results_df = results_df.sort_values(by = ['abs_coef', 'padj_sig'], ascending = False)
 
-    return result_df
+    return results_df
 
 def preprocess_lr_df(peak_score_df, peak_covariates_df):
     peak_data_df = peak_score_df.merge(peak_covariates_df)
