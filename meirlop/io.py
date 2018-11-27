@@ -48,7 +48,7 @@ def read_scored_fasta(fasta_file, description_delim = ' '):
                   in description_dict.items()}
     return sequence_dict, score_dict, description_dict
 
-def get_motif_matrices(motifs_file):
+def read_motif_matrices(motifs_file):
     motifs_bs = jaspar.read(motifs_file, format = 'jaspar')
     motif_matrix_dict = {f'{motif.matrix_id} {motif.name}':
                          np.array([list(motif.pwm[nuc])
