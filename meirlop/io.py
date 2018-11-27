@@ -9,7 +9,7 @@ def read_fasta(fasta_file, chromsizes = False):
     """
     Helper function to load sequences from a fasta file into a dict
     """
-    fa_dict = {sequence.id: str(sequence.seq) for sequence in SeqIO.parse(open(fasta_file),'fasta')}
+    fa_dict = {sequence.id: str(sequence.seq) for sequence in SeqIO.parse(fasta_file,'fasta')}
     if chromsizes:
         fa_chromsizes_dict = {key: (0, len(value)) for key, value in fa_dict.items()}
         return fa_dict, fa_chromsizes_dict
