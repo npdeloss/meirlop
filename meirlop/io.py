@@ -1,4 +1,4 @@
-from panda import pd
+import pandas as pd
 
 from Bio import SeqIO
 import Bio.motifs.jaspar as jaspar
