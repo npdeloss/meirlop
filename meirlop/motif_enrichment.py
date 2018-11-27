@@ -33,7 +33,7 @@ def analyze_peaks_with_prerank(peak_score_df,
 
     peak_data_df = peak_data_df.sort_values(by = peak_score_col, ascending = False)
 
-    peak_id_to_peak_idx = {v:i for i, v in enumerate(set(list(peak_data_df[peak_id_col])))}
+    peak_id_to_peak_idx = {v:i for i, v in enumerate(list(peak_data_df[peak_id_col]))}
     peak_idx_to_peak_id = {v:k for k, v in peak_id_to_peak_idx.items()}
 
     motif_peak_idx_set_dict = {motif_id: {peak_id_to_peak_idx[peak_id]
