@@ -5,6 +5,8 @@ import Bio.motifs.jaspar as jaspar
 from Bio.Alphabet.IUPAC import IUPACUnambiguousDNA as dna_alphabet
 from Bio.Seq import Seq
 
+import tempfile
+
 def read_fasta(fasta_file, chromsizes = False):
     """
     Helper function to load sequences from a fasta file into a dict
