@@ -26,7 +26,7 @@ def write_fasta(sequence_dict, fasta_file):
     fasta_file.write(fasta_string)
     return fasta_string
 
-def write_scored_fasta(sequence_dict, score_dict, fasta_file, reverse = False, other_dicts = []):
+def write_scored_fasta(sequence_dict, score_dict, fasta_file, reverse = True, other_dicts = []):
     sorted_keys = sorted(list(sequence_dict.keys()),
                          key = lambda k: score_dict[k])
     tups = [(key, score_dict[key]) + tuple([other_dict[key]
@@ -34,7 +34,12 @@ def write_scored_fasta(sequence_dict, score_dict, fasta_file, reverse = False, o
             for key in sorted_keys]
     rekey = lambda tup: ' '.join(map(str, list(tup)))
     rekeyed_sequence_dict = {rekey(tup): sequence_dict[tup[0]] for tup in tups}
-    return write_fasta(rekeyed_sequence_dict, fasta_file)
+    rekeys = [rekey(tup) for tup in tups]
+    # Keep sorted by score
+    fasta_string = '\n'.join([f'>{rekey}\n{rekeyed_sequence_dict[rekey]}' for rekey in rekeys]) + '\n'
+    fasta_file.write(fasta_string)
+    return fasta_string
+    # return write_fasta(rekeyed_sequence_dict, fasta_file)
 
 def read_scored_fasta(fasta_file, description_delim = ' '):
     fasta_records = list(SeqIO.parse(fasta_file, 'fasta'))
