@@ -8,12 +8,62 @@ from tqdm import tqdm
 import datetime
 from timeit import default_timer as timer
 
-# def analyze_peaks_with_lr(peak_score_df,
-#                           peak_set_dict,
-#                           peak_covariates_df,
-#                           min_set_size = 1,
-#                           max_set_size = np.inf,
-#                           n_jobs = 1):
+from sklearn.preprocessing import StandardScaler
+from statsmodels.stats.multitest import multipletests as mt
+
+def analyze_peaks_with_lr(peak_score_df,
+                          peak_set_dict,
+                          peak_covariates_df,
+                          padj_method = 'fdr_bh',
+                          min_set_size = 1,
+                          max_set_size = np.inf,
+                          n_jobs = n_jobs,
+                          progress_wrapper = tqdm):
+
+    lr_df = preprocess_lr_df(score_df, peak_covariates_df)
+    peak_id_colname = lr_df.columns[0]
+    score_colname = lr_df.columns[1]
+    cov_colnames = list(lr_df.columns[2:])
+    process_motif_id = lambda motif_id: (motif_id,) + compute_logit_regression_for_peak_set(peak_set_dict[motif_id],
+                                                                                            lr_df,
+                                                                                            peak_id_colname,
+                                                                                            score_colname,
+                                                                                            cov_colnames)[:-1]
+    result_tups = Parallel(n_jobs=n_jobs)(delayed(process_motif_id)(motif_id) for motif_id in progress_wrapper(peak_set_dict.keys()))
+    results_df = pd.DataFrame(result_tups, columns = ['motif_id', 'coef', 'pval'])
+    results_df['padj'] = mt(results_df['pval'], method = padj_method)[1]
+
+    results_df['padj_sig'] = (results_df['padj'] < 0.05).astype(int)
+    results_df['abs_coef'] = np.abs(results_df['coef'])
+    results_df = lr_results_df.sort_values(by = ['abs_coef', 'padj_sig'], ascending = False)
+
+    return result_df
+
+def preprocess_lr_df(score_df, peak_covariates_df):
+    peak_data_df = peak_score_df.merge(peak_covariates_df)
+    peak_id_colname = peak_score_df.columns[0]
+    peak_score_colname = peak_data_df.columns[1]
+    peak_covariate_colnames = list(peak_covariates_df.columns[1:])
+
+    ss = StandardScaler(with_mean = True, with_std = True)
+    X = ss.fit_transform(peak_data_df[[peak_score_colname] + peak_covariate_colnames])
+    lr_df = pd.DataFrame(X, columns = [peak_score_colname] + peak_covariate_colnames)
+    lr_df.insert(0, peak_id_col, peak_score_df[peak_id_colname])
+    return lr_df
+
+def compute_logit_regression_for_peak_set(peak_set,
+                                          lr_df,
+                                          peak_id_colname,
+                                          score_colname,
+                                          cov_colnames):
+    y = lr_df[peak_id_colname].isin(peak_set)
+    indep_var_cols = [score_colname] + cov_colnames
+    X = lr_df[indep_var_cols]
+    model = sm.Logit(y, X)
+    result = model.fit()
+    coef = result.params[score_colname]
+    pval = result.pvalues[score_colname]
+    return coef, pval, result
 
 def analyze_peaks_with_prerank(peak_score_df,
                                peak_set_dict,
@@ -26,7 +76,7 @@ def analyze_peaks_with_prerank(peak_score_df,
                                n_jobs = 1,
                                progress_wrapper = tqdm):
     peak_data_df = peak_score_df.merge(peak_strata_df)
-    peak_id_col = peak_data_df.columns[0]
+    peak_id_col = peak_score_df.columns[0]
     peak_score_col = peak_data_df.columns[1]
     peak_batch_cols = list(peak_strata_df.columns[1:])
 
@@ -77,7 +127,7 @@ def analyze_peaks_with_prerank(peak_score_df,
     enrichment_score_results_df['fdr_sig'] = (enrichment_score_results_df['fdr'] < 0.05).astype(int)
     enrichment_score_results_df['abs_nes'] = np.abs(enrichment_score_results_df['nes'])
     enrichment_score_results_df = enrichment_score_results_df.sort_values(by = ['fdr_sig', 'abs_nes'], ascending = False).reset_index(drop = True)
-    return enrichment_score_results_df
+    return enrichment_score_results_df, shuffled_permuted_peak_data, peak_idx_to_peak_id
 
 def applyParallel(dfGrouped, func, n_jobs):
     retLst = Parallel(n_jobs=n_jobs)(delayed(func)(group) for name, group in dfGrouped)
