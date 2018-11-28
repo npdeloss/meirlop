@@ -15,7 +15,7 @@ from statsmodels.stats.multitest import multipletests as mt
 
 def analyze_peaks_with_lr(peak_score_df,
                           peak_set_dict,
-                          peak_covariates_df,
+                          peak_covariates_df = None,
                           padj_method = 'fdr_bh',
                           min_set_size = 1,
                           max_set_size = np.inf,
@@ -41,11 +41,17 @@ def analyze_peaks_with_lr(peak_score_df,
 
     return results_df
 
-def preprocess_lr_df(peak_score_df, peak_covariates_df):
-    peak_data_df = peak_score_df.merge(peak_covariates_df)
-    peak_id_colname = peak_score_df.columns[0]
-    peak_score_colname = peak_data_df.columns[1]
-    peak_covariate_colnames = list(peak_covariates_df.columns[1:])
+def preprocess_lr_df(peak_score_df, peak_covariates_df = None):
+    if peak_covariates_df is None:
+        peak_data_df = peak_score_df.copy()
+        peak_id_colname = peak_score_df.columns[0]
+        peak_score_colname = peak_data_df.columns[1]
+        peak_covariate_colnames = []
+    else:
+        peak_data_df = peak_score_df.merge(peak_covariates_df)
+        peak_id_colname = peak_score_df.columns[0]
+        peak_score_colname = peak_data_df.columns[1]
+        peak_covariate_colnames = list(peak_covariates_df.columns[1:])
 
     ss = StandardScaler(with_mean = True, with_std = True)
     X = ss.fit_transform(peak_data_df[[peak_score_colname] + peak_covariate_colnames])
@@ -69,7 +75,7 @@ def compute_logit_regression_for_peak_set(peak_set,
 
 def analyze_peaks_with_prerank(peak_score_df,
                                peak_set_dict,
-                               peak_strata_df,
+                               peak_strata_df = None,
                                min_set_size = 1,
                                max_set_size = np.inf,
                                nperm = 10,
@@ -77,10 +83,17 @@ def analyze_peaks_with_prerank(peak_score_df,
                                rs = np.random.RandomState(),
                                n_jobs = 1,
                                progress_wrapper = tqdm):
-    peak_data_df = peak_score_df.merge(peak_strata_df)
-    peak_id_col = peak_score_df.columns[0]
-    peak_score_col = peak_data_df.columns[1]
-    peak_batch_cols = list(peak_strata_df.columns[1:])
+    if peak_strata_df is None:
+        peak_data_df = peak_score_df.copy()
+        peak_data_df['peak_strata'] = 1
+        peak_id_col = peak_score_df.columns[0]
+        peak_score_col = peak_data_df.columns[1]
+        peak_batch_cols = ['peak_strata']
+    else:
+        peak_data_df = peak_score_df.merge(peak_strata_df)
+        peak_id_col = peak_score_df.columns[0]
+        peak_score_col = peak_data_df.columns[1]
+        peak_batch_cols = list(peak_strata_df.columns[1:])
 
 
     peak_data_df = peak_data_df.sort_values(by = peak_score_col, ascending = False)
@@ -190,7 +203,7 @@ def append_shuffled_permuted_peak_data(peak_data_df,
                                                                        n_jobs = n_jobs)
     peak_data_perms_dfs = [permute_peak_data_shuf(shuf) for shuf in progress_wrapper(range(nshuf))]
     merge_and_set_index = lambda shuf: get_shuf_sub_df(shuf).merge(peak_data_perms_dfs[shuf]).set_index(peak_data_common_cols)
-    peak_data_perm_df = pd.concat([merge_and_set_index(shuf) for shuf in progress_wrapper(range(nshuf))], axis = 1)
+    peak_data_perm_df = pd.concat([merge_and_set_index(shuf) for shuf in range(nshuf)], axis = 1)
 
     # Merge with original data
     peak_data_with_null_perms_and_shufs_df = peak_data_df.merge(peak_data_perm_df.reset_index())
@@ -295,7 +308,7 @@ def compute_enrichment_scores(motif_peak_idx_set_dict, min_set_size, max_set_siz
     get_fdr_for_pos_nes = lambda nes: (np.sum(np.where(nes > pos_null_nes_vec, 0, 1))/pos_null_nes_vec.size, np.sum(np.where(nes > pos_null_nes_vec, 0, 1)))
     get_fdr_for_neg_nes = lambda nes: (np.sum(np.where(nes < neg_null_nes_vec, 0, 1))/neg_null_nes_vec.size, np.sum(np.where(nes < neg_null_nes_vec, 0, 1)))
     get_fdr_for_nes = lambda nes: get_fdr_for_pos_nes(nes) if nes >= 0 else get_fdr_for_neg_nes(nes)
-    fdrs = [get_fdr_for_nes(nes) for nes in progress_wrapper(nes_vec)]
+    fdrs = [get_fdr_for_nes(nes) for nes in nes_vec]
     enrichment_score_results_tups = [tup[:-1] + (fdrs[i]) for i, tup in progress_wrapper(enumerate(enrichment_score_results_tups_tmp))]
 
     del enrichment_score_results_tups_tmp

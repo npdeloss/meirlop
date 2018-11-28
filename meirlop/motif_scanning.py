@@ -10,19 +10,6 @@ import MOODS.scan
 import MOODS.tools
 import MOODS.parsers
 
-def get_scored_sequence_dict(fasta_filename, description_delim = ' '):
-    fasta_records = list(SeqIO.parse(open(fasta_filename),'fasta'))
-    sequence_dict = {rec.id: str(rec.seq)
-                     for rec
-                     in fasta_records}
-    description_dict = {rec.id: rec.description.split(description_delim)
-                        for rec
-                        in fasta_records}
-    score_dict = {key: float(val[1])
-                  for key, val
-                  in description_dict.items()}
-    return sequence_dict, score_dict, description_dict
-
 def get_motif_fwd_rev_matrices(motif_matrix_dict):
     motif_fwd_matrix_dict = {(motif_id, '+'): motif_matrix
                              for motif_id, motif_matrix
