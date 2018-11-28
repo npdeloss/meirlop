@@ -1,3 +1,18 @@
+# JASPAR download
+*_pfms_jaspar.txt
+
+# Sequence files
+*.fa
+*.fa.gz
+*.fq
+*.fq.gz
+*.fasta
+*.fasta.gz
+*.fastq
+*.fastq.gz
+*.sam
+*.bam
+
 # Compiled python modules.
 *.pyc
 

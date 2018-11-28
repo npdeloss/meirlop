@@ -1,0 +1,3 @@
+include README.md
+include notebooks/*.ipynb
+include notebooks/*.txt
