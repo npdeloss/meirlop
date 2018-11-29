@@ -5,7 +5,7 @@ from setuptools.command.test import test as TestCommand
 
 
 
-__version__='0.1.1'
+__version__='0.0.1'
 
 # if sys.argv[-1] == 'publish':
 #     os.system("python setup.py sdist bdist_wheel register upload")
@@ -42,14 +42,15 @@ setup(name='meirlop',
       package_data={'meirlop': ['notebooks/*.ipynb', 'notebooks/*.txt'],},
       include_package_data=True,
       install_requires=[
-                        'biopython>=1.72',
-                        'joblib>=0.12',
-                        'numpy>=1.13',
-                        'pandas>=0.23',
-                        'pybedtools>=0.7',
-                        'scikit-learn>=0.19',
-                        'statsmodels>=0.9',
-                        'tqdm>=4.28'
+                        'biopython',
+                        'joblib',
+                        'moods-python',
+                        'numpy',
+                        'pandas',
+                        'pybedtools',
+                        'scikit-learn',
+                        'statsmodels',
+                        'tqdm'
                         ],
       zip_safe=False,
       download_url='https://github.com/npdeloss/meirlop',)
