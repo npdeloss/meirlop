@@ -31,7 +31,10 @@ def analyze_peaks_with_lr(peak_score_df,
                                                                                             peak_id_colname,
                                                                                             score_colname,
                                                                                             cov_colnames)[:-1]
-    result_tups = Parallel(n_jobs=n_jobs)(delayed(process_motif_id)(motif_id) for motif_id in progress_wrapper(peak_set_dict.keys()))
+    if progress_wrapper is None:
+        result_tups = Parallel(n_jobs=n_jobs)(delayed(process_motif_id)(motif_id) for motif_id in peak_set_dict.keys())
+    else:
+        result_tups = Parallel(n_jobs=n_jobs)(delayed(process_motif_id)(motif_id) for motif_id in progress_wrapper(peak_set_dict.keys()))
     results_df = pd.DataFrame(result_tups, columns = ['motif_id', 'coef', 'pval'])
     results_df['padj'] = mt(results_df['pval'], method = padj_method)[1]
 
@@ -68,7 +71,7 @@ def compute_logit_regression_for_peak_set(peak_set,
     indep_var_cols = [score_colname] + cov_colnames
     X = lr_df[indep_var_cols]
     model = sm.Logit(y, X)
-    result = model.fit()
+    result = model.fit(disp=0)
     coef = result.params[score_colname]
     pval = result.pvalues[score_colname]
     return coef, pval, result
