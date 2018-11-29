@@ -9,13 +9,13 @@ requirements:
   build:
     - python
     - setuptools
-    - numpy x.x
+    - numpy >=1.15
   run:
     - python
     - biopython >=1.72
     - joblib >=0.12
     - moods >=1.9
-    - numpy x.x
+    - numpy >=1.15
     - pandas >=0.23
     - pybedtools >=0.7
     - scikit-learn >=0.19
