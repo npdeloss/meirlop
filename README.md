@@ -1,6 +1,11 @@
 # Motif Enrichment In Ranked Lists Of Peaks
 This project analyzes the relative enrichment of transcription factor binding motifs found in peaks at the top or bottom of a given ranking/score. The design is based on [MOODS](https://github.com/jhkorhonen/MOODS/tree/master/python) and [GSEApy](https://github.com/zqfang/GSEApy).
 
+# Installation
+To install this package with conda run:
+`conda install -c bioconda -c npdeloss meirlop` 
+Assuming bioconda is not in your channels.
+
 # Usage
 Full usage example available through a [jupyter notebook](notebooks/usage.ipynb)
 
