@@ -3,7 +3,7 @@ This project analyzes the relative enrichment of transcription factor binding mo
 
 # Installation
 To install this package with conda run:
-`conda install -c bioconda -c npdeloss meirlop` 
+`conda install -c bioconda -c npdeloss meirlop`
 Assuming bioconda is not in your channels.
 
 # Usage
@@ -16,7 +16,6 @@ print(datetime.datetime.now())
 from meirlop import analyze_peaks_with_prerank
 from tqdm import tqdm_notebook
 
-n_jobs = 20
 rs = np.random.RandomState(1234)
 
 analysis_results = analyze_peaks_with_prerank(peak_score_df = score_df,
@@ -27,7 +26,8 @@ analysis_results = analyze_peaks_with_prerank(peak_score_df = score_df,
                                               nperm = 10,
                                               nshuf = 100,
                                               rs = rs,
-                                              n_jobs = n_jobs,
+                                              n_jobs_perm = 20,
+                                              n_jobs_ind = 1,
                                               progress_wrapper = tqdm_notebook)
 
 enrichment_score_results_df, shuffled_permuted_peak_data, peak_idx_to_peak_id = analysis_results
