@@ -3,6 +3,7 @@
 
 # Sequence files
 *.fa
+*.fai
 *.fa.gz
 *.fq
 *.fq.gz
