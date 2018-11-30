@@ -84,7 +84,8 @@ def analyze_peaks_with_prerank(peak_score_df,
                                nperm = 10,
                                nshuf = 100,
                                rs = np.random.RandomState(),
-                               n_jobs = 1,
+                               n_jobs_perm = 1,
+                               n_jobs_ind = 1,
                                progress_wrapper = tqdm):
     if peak_strata_df is None:
         peak_data_df = peak_score_df.copy()
@@ -121,7 +122,7 @@ def analyze_peaks_with_prerank(peak_score_df,
                                                                      nperm = nperm,
                                                                      nshuf = nshuf,
                                                                      rs = rs,
-                                                                     n_jobs = n_jobs,
+                                                                     n_jobs = n_jobs_perm,
                                                                      progress_wrapper = progress_wrapper)
     # end = timer()
     # runtime = end - start
@@ -140,7 +141,7 @@ def analyze_peaks_with_prerank(peak_score_df,
                                                             correl_vector,
                                                             peak_idx_matrix,
                                                             null_perm_mask_vector,
-                                                            n_jobs,
+                                                            n_jobs_ind,
                                                             progress_wrapper)
     enrichment_score_results_df['fdr_sig'] = (enrichment_score_results_df['fdr'] < 0.05).astype(int)
     enrichment_score_results_df['abs_nes'] = np.abs(enrichment_score_results_df['nes'])
@@ -278,7 +279,10 @@ def compute_enrichment_score(tag_indicator, correl_vector, null_perm_mask_vector
 
 def get_tag_indicator_from_peak_idx_set_parallel(peak_idx_set, peak_idx_matrix, n_jobs):
     process_subarray = lambda subarray: [int(peak_idx in peak_idx_set) for peak_idx in subarray]
-    return np.array(Parallel(n_jobs=n_jobs)(delayed(process_subarray)(subarray) for subarray in peak_idx_matrix))
+    if n_jobs > 1:
+        return np.array(Parallel(n_jobs=n_jobs)(delayed(process_subarray)(subarray) for subarray in peak_idx_matrix))
+    else:
+        return np.isin(peak_idx_matrix, list(peak_idx_set)).astype(int)
 
 def compute_enrichment_scores(motif_peak_idx_set_dict, min_set_size, max_set_size, correl_vector, peak_idx_matrix, null_perm_mask_vector, n_jobs, progress_wrapper = tqdm):
 
