@@ -41,7 +41,7 @@ setup(name='meirlop',
       packages=['meirlop'],
       entry_points={
           'console_scripts':[
-              'meirlop = meirlop.__main__:main'
+              'meirlop=meirlop.__main__:main'
           ]
       },
       install_requires=[

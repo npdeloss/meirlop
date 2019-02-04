@@ -5,6 +5,10 @@ package:
 source:
   path: ..
 
+build:
+  entry_points:
+    - meirlop = meirlop.__main__:main
+
 requirements:
   build:
     - python=3.6
