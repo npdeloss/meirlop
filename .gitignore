@@ -1,3 +1,5 @@
+# Jupyter
+.ipynb_*
 # JASPAR download
 *_pfms_jaspar.txt
 
@@ -13,6 +15,9 @@
 *.fastq.gz
 *.sam
 *.bam
+
+# Python cache
+__pycache__ 
 
 # Compiled python modules.
 *.pyc
