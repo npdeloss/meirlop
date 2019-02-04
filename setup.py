@@ -40,9 +40,10 @@ setup(name='meirlop',
       license='MIT',
       packages=['meirlop'],
       entry_points={
-          'console_scripts': [
+          'console_scripts':[
               'meirlop = meirlop.__main__:main'
-          ],
+          ]
+      },
       install_requires=[
                         'biopython',
                         'joblib',
