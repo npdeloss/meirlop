@@ -27,6 +27,6 @@ optional arguments:
                      output directory.
   --kmer max_k       Set maximum length of kmers to consider during
                      regression. Frequency of kmers will be used as a
-					 covariate in logistic regression.
+                     covariate in logistic regression.
 
 ```

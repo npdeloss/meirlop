@@ -1,5 +1,5 @@
 # Jupyter
- .ipynb_*
+ .ipynb_checkpoints
 # JASPAR download
 *_pfms_jaspar.txt
 
