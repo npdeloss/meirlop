@@ -73,7 +73,7 @@ def main():
     
     args = parser.parse_args()
     scored_fasta_file = args.scored_fasta_file
-    motif_matrix_file = args.motif_matrix_fileco
+    motif_matrix_file = args.motif_matrix_file
     save_scan = args.save_scan
     max_k = args.max_k
     
