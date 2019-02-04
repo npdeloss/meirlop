@@ -7,11 +7,11 @@ source:
 
 requirements:
   build:
-    - python >= 3.6
+    - python >=3.6
     - setuptools
-    - numpy >= 1.13
+    - numpy >=1.13
   run:
-    - python >= 3.6
+    - python >=3.6
     - biopython
     - joblib
     - moods
