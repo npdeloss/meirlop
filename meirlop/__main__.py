@@ -67,7 +67,8 @@ def main():
                             'Set maximum length of kmers to '
                             'consider during regression. '
                             'Frequency of kmers will be used '
-                            'as a covariate in logistic regression.'
+                            'as a covariate in logistic regression. '
+                            'Default = 2'
                         ))
     
     args = parser.parse_args()
