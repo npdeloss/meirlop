@@ -4,7 +4,7 @@ The design is based on [MOODS](https://github.com/jhkorhonen/MOODS/tree/master/p
 
 # Installation
 To install this package with conda run:
-`conda install -c bioconda -c npdeloss meirlop`
+`conda install -c bioconda -c npdeloss meirlop`  
 Assuming bioconda is not in your channels.
 
 # Usage
