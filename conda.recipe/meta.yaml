@@ -15,7 +15,7 @@ requirements:
     - biopython
     - joblib
     - moods
-    - numpy >= 1.13
+    - numpy >=1.13
     - pandas
     - scikit-learn
     - statsmodels
