@@ -25,4 +25,8 @@ optional arguments:
                      may exceed this during logistic regression.
   --scan             Set this flag to write motif scanning results table to
                      output directory.
+  --kmer max_k       Set maximum length of kmers to consider during
+                     regression. Frequency of kmers will be used as a
+					 covariate in logistic regression.
+
 ```

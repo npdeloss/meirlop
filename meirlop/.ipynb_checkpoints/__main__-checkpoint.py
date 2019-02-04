@@ -57,6 +57,7 @@ def main():
                         ))
     
     parser.add_argument('--kmer', 
+                        metavar = 'max_k', 
                         dest = 'max_k', 
                         type = int, 
                         default = 2, 
