@@ -1,4 +1,3 @@
-from .io import *
-from .sequence_extraction import *
-from .motif_scanning import scan_motifs, format_scan_results
-from .motif_enrichment import analyze_peaks_with_lr, analyze_peaks_with_prerank
+from .motif_enrichment import analyze_scored_fasta_data_with_lr
+from .io import read_scored_fasta, read_motif_matrices
+

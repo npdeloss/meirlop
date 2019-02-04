@@ -5,7 +5,7 @@ from setuptools.command.test import test as TestCommand
 
 
 
-__version__='0.0.1'
+__version__='0.0.2'
 
 # if sys.argv[-1] == 'publish':
 #     os.system("python setup.py sdist bdist_wheel register upload")
@@ -22,7 +22,7 @@ setup(name='meirlop',
       description='Motif Enrichment In Ranked Lists Of Peaks',
       long_description=('This project analyzes the relative enrichment of '
       'transcription factor binding motifs found in peaks at the top or bottom of '
-      'a given ranking/score. The design is based on MOODS and GSEApy.'),
+      'a given ranking/score. The design is based on MOODS and statsmodels.'),
       classifiers=[
           'Development Status :: 2 - Pre-Alpha',
           'Intended Audience :: Science/Research',
@@ -39,20 +39,21 @@ setup(name='meirlop',
       author_email='npdeloss@ucsd.edu',
       license='MIT',
       packages=['meirlop'],
-      package_data={'meirlop': ['notebooks/*.ipynb', 'notebooks/*.txt'],},
-      include_package_data=True,
+      entry_points={
+          'console_scripts': [
+              'meirlop = meirlop.__main__:main'
+          ],
       install_requires=[
                         'biopython',
                         'joblib',
                         'moods-python',
                         'numpy',
                         'pandas',
-                        'pybedtools',
                         'scikit-learn',
                         'statsmodels',
                         'tqdm'
                         ],
       zip_safe=False,
-      download_url='https://github.com/npdeloss/meirlop',)
+      download_url='https://github.com/npdeloss/meirlop')
 
 __author__ = 'Nathaniel Delos Santos'

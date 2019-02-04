@@ -1,10 +1,5 @@
 import pandas as pd
-import numpy as np
-
-from Bio import SeqIO
-import Bio.motifs.jaspar as jaspar
-from Bio.Alphabet.IUPAC import IUPACUnambiguousDNA as dna_alphabet
-from Bio.Seq import Seq
+from joblib import Parallel, delayed
 
 import MOODS.scan
 import MOODS.tools
@@ -26,10 +21,11 @@ def get_motif_bg_lo_matrix_threshold(motif_matrix, bg, pval = 0.01, pseudocount 
     return lo_matrix, threshold
 
 def get_motif_bg_lo_matrices_thresholds(motif_matrix, bg, pval = 0.01, pseudocount = 0.001):
-    motif_lo_matrix_threshold_dict = {motif_id: get_motif_bg_lo_matrix_threshold(motif_matrix,
-                                                                                 bg,
-                                                                                 pval = pval,
-                                                                                 pseudocount = pseudocount)
+    motif_lo_matrix_threshold_dict = {motif_id: get_motif_bg_lo_matrix_threshold(
+        motif_matrix,
+        bg,
+        pval = pval,
+        pseudocount = pseudocount)
                                       for motif_id, motif_matrix
                                       in motif_matrix.items()}
     motif_lo_matrix_dict = {motif_id: tup[0]
@@ -43,12 +39,12 @@ def get_motif_bg_lo_matrices_thresholds(motif_matrix, bg, pval = 0.01, pseudocou
 def scan_motifs(motif_matrix_dict,
                 peak_sequence_dict,
                 bg = (0.25, 0.25, 0.25, 0,25),
-                pval = 0.01,
+                pval = 0.001,
                 pseudocount = 0.001,
                 window_size = 7):
-
+    
     motif_fwd_rev_matrix_dict = get_motif_fwd_rev_matrices(motif_matrix_dict)
-
+    
     motif_bg_lo_matrices_thresholds = get_motif_bg_lo_matrices_thresholds(
         motif_fwd_rev_matrix_dict,
         bg,
@@ -59,19 +55,16 @@ def scan_motifs(motif_matrix_dict,
     peak_ids = list(peak_sequence_dict.keys())
     seqs = [peak_sequence_dict[peak_id]
             for peak_id in peak_ids]
-
+    
     motif_ids = list(motif_lo_matrix_dict.keys())
     matrices = [motif_lo_matrix_dict[motif_id]
                 for motif_id in motif_ids]
     thresholds = [motif_threshold_dict[motif_id]
                   for motif_id in motif_ids]
-
+    
     scanner = MOODS.scan.Scanner(window_size)
     scanner.set_motifs(matrices, bg, thresholds)
-
-    scans_by_peak = {peak_id: scanner.scan(seq)
-                     for peak_id, seq
-                     in peak_sequence_dict.items()}
+    
     results = [(peak_id,) + motif_ids[i] + (result.pos, result.score)
                for peak_id, seq
                in peak_sequence_dict.items()
@@ -79,8 +72,39 @@ def scan_motifs(motif_matrix_dict,
                in enumerate(scanner.scan(seq))
                for result
                in results]
-
+    
     return results
+
+def chunk_list(l, n):
+    chunks = [[] for i in range(n)]
+    for index, item in enumerate(l):
+        chunks[index % n].append(item)
+    return chunks
+
+def scan_motifs_parallel(motif_matrix_dict,
+                         peak_sequence_dict,
+                         bg = (0.25, 0.25, 0.25, 0,25),
+                         pval = 0.001,
+                         pseudocount = 0.001,
+                         window_size = 7, 
+                         n_jobs = 1):
+    peak_ids_by_chunk = chunk_list(peak_sequence_dict.keys(), n_jobs)
+    peak_sequence_dicts_by_chunk = [{peak_id: peak_sequence_dict[peak_id] 
+                                     for peak_id in chunk} 
+                                    for chunk in peak_ids_by_chunk]
+    results_by_chunk = Parallel(n_jobs = n_jobs)(delayed(scan_motifs)(
+        motif_matrix_dict,
+        peak_sequence_dict_of_chunk,
+        bg,
+        pval,
+        pseudocount,
+        window_size) 
+                                                 for peak_sequence_dict_of_chunk 
+                                                 in peak_sequence_dicts_by_chunk)
+    result_tups = [result_tup 
+                   for chunk in results_by_chunk 
+                   for result_tup in chunk]
+    return result_tups
 
 def format_scan_results(scan_results, dedup_strands = True):
     scan_results_df = pd.DataFrame(data = scan_results,

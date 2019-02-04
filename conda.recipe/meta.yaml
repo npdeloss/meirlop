@@ -1,6 +1,6 @@
 package:
   name: meirlop
-  version: "0.0.1"
+  version: "0.0.2"
 
 source:
   path: ..
@@ -17,7 +17,6 @@ requirements:
     - moods
     - numpy x.x
     - pandas
-    - pybedtools
     - scikit-learn
     - statsmodels
     - tqdm
