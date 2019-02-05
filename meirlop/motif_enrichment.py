@@ -104,9 +104,9 @@ def analyze_scored_fasta_data_with_lr(
         peak_score_df, 
         motif_peak_set_dict, 
         covariates_df, 
-        padj_method = 'fdr_bh', 
-        min_set_size = 1, 
-        max_set_size = np.inf, 
+        padj_method = padj_method, 
+        min_set_size = min_set_size, 
+        max_set_size = max_set_size, 
         progress_wrapper = tqdm)
     
     end = timer()
