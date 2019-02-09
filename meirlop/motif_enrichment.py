@@ -25,7 +25,8 @@ def analyze_scored_fasta_data_with_lr(
     pval = 0.001, 
     pseudocount = 0.001, 
     max_k = 2, 
-    use_length = False,
+    use_length = False, 
+    user_covariates_df = None, 
     padj_method = 'fdr_bh', 
     min_set_size = 1, 
     max_set_size = np.inf, 
@@ -102,7 +103,23 @@ def analyze_scored_fasta_data_with_lr(
                                    'peak_length')
         peak_length_df = peak_length_df.sort_values(by = 'peak_id')
         covariate_dfs.append(peak_length_df)
-            
+    if user_covariates_df is not None:
+        user_covariates_df_cp = user_covariates_df.copy()
+        user_covariates_df_columns = list(user_covariates_df_cp.columns)
+        user_covariates_df_cp = (user_covariates_df_cp
+                                 .rename(columns = {
+                                     user_covariates_df_columns[0]: 'peak_id'
+                                 }))
+        user_covariates_df_cp = (user_covariates_df_cp
+                                 .rename(columns = {
+                                     colname: 'user_covariate_' + colname
+                                     for colname 
+                                     in user_covariates_df_columns[1:]
+                                 }))
+        user_covariates_df_cp = (user_covariates_df_cp
+                                 .sort_values(by = 'peak_id'))
+        covariate_dfs.append(user_covariates_df_cp)
+    
     covariates_df = pd.concat([(df
                                 .set_index('peak_id')) 
                                for df 

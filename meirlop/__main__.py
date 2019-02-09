@@ -84,6 +84,37 @@ def setup_parser(parser):
                             'in logistic regression. '
                         ))
     
+    parser.add_argument('--covariates', 
+                        metavar = 'covariates_table_file', 
+                        dest = 'covariates_table_file', 
+                        type = argparse.FileType('r'), 
+                        help = (
+                            'Supply an optional tab-separated '
+                            'file containing '
+                            'additional covariates '
+                            'to incorporate '
+                            'in logistic regression. '
+                            'Columns should be labeled, '
+                            'and the first column should '
+                            'match sequence names in '
+                            'the fasta file.'
+                        ))
+    
+    parser.add_argument('--score', 
+                        metavar = 'score_column', 
+                        dest = 'score_column', 
+                        default = None, 
+                        type = str, 
+                        help = (
+                            'Name a column in ' 
+                            'covariates_table_column '
+                            'to use as the sequence score. '
+                            'By default, sequence score is drawn '
+                            'from the FASTA sequence header.'
+                            'Use if you don\'t want to '
+                            'include score in your FASTA file.'
+                        ))
+    
     parser.set_defaults(func = run_meirlop)
     
 def run_meirlop(args):
@@ -92,14 +123,27 @@ def run_meirlop(args):
     save_scan = args.save_scan
     max_k = args.max_k
     use_length = args.use_length
+    covariates_table_file = args.covariates_table_file
     output_dir = args.output_dir
+    score_column = args.score_column
     n_jobs = args.jobs
+    
+    user_covariates_df = None
+    if covariates_table_file is not None:
+        user_covariates_df = pd.read_table(user_covariates_df)
     
     os.environ['OMP_NUM_THREADS'] = f'{n_jobs}'
     os.environ['MKL_NUM_THREADS'] = f'{n_jobs}'
     
     sequence_dict, score_dict = read_scored_fasta(scored_fasta_file)[:-1]
     motif_matrix_dict = read_motif_matrices(motif_matrix_file)[0]
+    
+    if score_column is not None:
+        peak_id_column = user_covariates_df.columns[0]
+        score_dict = (user_covariates_df
+                      .set_index(peak_id_column)[score_column]
+                      .to_dict())
+        user_covariates_df = user_covariates_df.drop(columns = [score_column])
     
     (lr_results_df, 
      lr_input_df, 
