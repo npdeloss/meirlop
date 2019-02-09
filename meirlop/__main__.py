@@ -13,7 +13,11 @@ def main():
                                          'of motifs in a list of '
                                          'scored sequences.'
                                      ))
-    
+    setup_parser(parser)
+    args = parser.parse_args()
+    args.func(args)
+
+def setup_parser(parser):
     parser.add_argument('scored_fasta_file', 
                         metavar = 'scored_fasta_file',
                         type = argparse.FileType('r'), 
@@ -71,12 +75,24 @@ def main():
                             'Default = 2'
                         ))
     
-    args = parser.parse_args()
+    parser.add_argument('--length', 
+                        dest = 'use_length', 
+                        action='store_true', 
+                        help = (
+                            'Set this flag to incorporate '
+                            'sequence length as a covariate '
+                            'in logistic regression. '
+                        ))
+    
+    parser.set_defaults(func = run_meirlop)
+    
+def run_meirlop(args):
     scored_fasta_file = args.scored_fasta_file
     motif_matrix_file = args.motif_matrix_file
     save_scan = args.save_scan
     max_k = args.max_k
-    
+    use_length = args.use_length
+    output_dir = args.output_dir
     n_jobs = args.jobs
     
     os.environ['OMP_NUM_THREADS'] = f'{n_jobs}'
@@ -93,16 +109,17 @@ def main():
         score_dict, 
         motif_matrix_dict, 
         max_k = max_k, 
+        use_length = use_length, 
         n_jobs = n_jobs)
     
-    outpath = os.path.normpath(args.output_dir)
+    outpath = os.path.normpath(output_dir)
     if not os.path.exists(outpath):
         os.makedirs(outpath)
     
-    outpath_lr_results = os.path.normpath(args.output_dir + '/lr_results.tsv')
-    outpath_lr_input = os.path.normpath(args.output_dir + '/lr_input.tsv')
-    outpath_motif_peak_set_dict = os.path.normpath(args.output_dir + '/motif_peak_set_dict.p')
-    outpath_scan_results = os.path.normpath(args.output_dir + '/scan_results.tsv')
+    outpath_lr_results = os.path.normpath(output_dir + '/lr_results.tsv')
+    outpath_lr_input = os.path.normpath(output_dir + '/lr_input.tsv')
+    outpath_motif_peak_set_dict = os.path.normpath(output_dir + '/motif_peak_set_dict.p')
+    outpath_scan_results = os.path.normpath(output_dir + '/scan_results.tsv')
     
     lr_results_df.to_csv(outpath_lr_results, sep = '\t', index = False)
     lr_input_df.to_csv(outpath_lr_input, sep = '\t', index = False)

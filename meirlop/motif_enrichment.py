@@ -25,6 +25,7 @@ def analyze_scored_fasta_data_with_lr(
     pval = 0.001, 
     pseudocount = 0.001, 
     max_k = 2, 
+    use_length = False,
     padj_method = 'fdr_bh', 
     min_set_size = 1, 
     max_set_size = np.inf, 
@@ -69,6 +70,8 @@ def analyze_scored_fasta_data_with_lr(
     (scan_results_df, 
      motif_peak_set_dict) = format_scan_results(scan_results)
     
+    covariate_dfs = []
+    
     if max_k > 0:
 
         end = timer()
@@ -87,12 +90,26 @@ def analyze_scored_fasta_data_with_lr(
                               .rename(
                                   columns = {'sequence_id': 'peak_id'}
                               ))
-        covariates_df = frequency_ratio_df
-        lr_input_df = peak_score_df.merge(covariates_df)
-    else:
-        covariates_df = None
-        lr_input_df = peak_score_df.copy()
+        frequency_ratio_df = frequency_ratio_df.sort_values(by = 'peak_id')
+        covariate_dfs.append(frequency_ratio_df)
+
+    if use_length:
+        peak_length_dict = {k: len(v) 
+                            for k,v 
+                            in peak_sequence_dict}
+        peak_length_df = dict_to_df(peak_length_dict, 
+                                   'peak_id', 
+                                   'peak_length')
+        peak_length_df = peak_length_df.sort_values(by = 'peak_id')
+        covariate_dfs.append(peak_length_df)
+            
+    covariates_df = pd.concat([(df
+                                .set_index('peak_id')) 
+                               for df 
+                               in covariate_dfs], 
+                              axis = 1).reset_index()
     
+    lr_input_df = peak_score_df.merge(covariates_df)
     end = timer()
     runtime = end - start
     logging.info(f'{runtime} seconds')

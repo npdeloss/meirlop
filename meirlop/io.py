@@ -48,7 +48,10 @@ def read_scored_fasta(fasta_file, description_delim = ' '):
                                       .description
                                       .split(description_delim))
                         for rec
-                        in fasta_records}
+                        in fasta_records 
+                        if len(rec
+                               .description
+                               .split(description_delim)) > 1}
     score_dict = {key: float(val[1])
                   for key, val
                   in description_dict.items()}
