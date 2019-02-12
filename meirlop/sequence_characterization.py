@@ -103,11 +103,19 @@ def get_frequency_ratio_df(
                            in range(1, max_k + 1)]
 
     frequency_ratio_df = pd.concat(frequency_ratio_dfs, axis = 1).reset_index()
-
     if remove_redundant:
         columns_to_drop = ['kmer_ratio_' + number_to_pattern((len(alphabet)**k)-1, 
                                                              k, 
                                                              alphabet) 
                            for k in range(1, max_k + 1)]
+        if max_k > 1:
+            columns_to_drop = (columns_to_drop 
+                               + ['kmer_ratio_' + kmer 
+                                  for k in range(2, max_k + 1) 
+                                  for kmer 
+                                  in [number_to_pattern(number, k, alphabet) 
+                                      for number 
+                                      in range(len(alphabet)**k)] 
+                                  if len(set(kmer)) == 1])
         frequency_ratio_df = frequency_ratio_df.drop(columns = columns_to_drop)
     return frequency_ratio_df

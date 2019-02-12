@@ -107,12 +107,13 @@ def setup_parser(parser):
                         type = str, 
                         help = (
                             'Name a column in ' 
-                            'covariates_table_column '
+                            'covariates_table_file '
                             'to use as the sequence score. '
+                            'Use if you don\'t want to '
+                            'include score in your FASTA file. '
                             'By default, sequence score is drawn '
                             'from the FASTA sequence header.'
-                            'Use if you don\'t want to '
-                            'include score in your FASTA file.'
+                            
                         ))
     
     parser.set_defaults(func = run_meirlop)
@@ -144,6 +145,8 @@ def run_meirlop(args):
                       .set_index(peak_id_column)[score_column]
                       .to_dict())
         user_covariates_df = user_covariates_df.drop(columns = [score_column])
+        if user_covariates_df.shape[1] <= 1:
+            user_covariates_df = None
     
     (lr_results_df, 
      lr_input_df, 

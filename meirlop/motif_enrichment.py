@@ -7,6 +7,7 @@ from tqdm import tqdm
 import pandas as pd
 import numpy as np
 
+import statsmodels.api as smapi
 import statsmodels.formula.api as sm
 from statsmodels.stats.multitest import multipletests as mt
 
@@ -240,6 +241,7 @@ def compute_logit_regression_for_peak_set(peak_set,
     y = lr_df[peak_id_colname].isin(peak_set)
     indep_var_cols = [score_colname] + cov_colnames
     X = lr_df[indep_var_cols]
+    # X = smapi.add_constant(lr_df[indep_var_cols])
     model = sm.Logit(y, X)
     result = model.fit(disp=0)
     coef = result.params[score_colname]
