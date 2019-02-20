@@ -4,7 +4,12 @@ import os
 import os.path
 import pickle
 
-from . import analyze_scored_fasta_data_with_lr, read_scored_fasta, read_motif_matrices
+from tqdm import tqdm
+
+from . import analyze_scored_fasta_data_with_lr
+from . import read_scored_fasta, read_motif_matrices
+from . import get_scored_sequences
+from . import get_html_for_lr_results_df
 
 def main():
     parser = argparse.ArgumentParser(prog = 'meirlop', 
@@ -18,13 +23,42 @@ def main():
     args.func(args)
 
 def setup_parser(parser):
-    parser.add_argument('scored_fasta_file', 
-                        metavar = 'scored_fasta_file',
+    input_type = parser.add_mutually_exclusive_group(required = True)
+    input_type.add_argument('--fa', 
+                            metavar = 'scored_fasta_file', 
+                            dest = 'scored_fasta_file', 
+                            type = argparse.FileType('r'), 
+                            help = (
+                                'A scored fasta file, '
+                                'where sequence headers are of form: \n'
+                                '">sequence_name sequence_score". '
+                                'Mutually exclusive with --bed. '
+                                'Defaults to "peaks.fa".'
+                            ))
+    
+    input_type.add_argument('--bed', 
+                            metavar = 'bed_file', 
+                            dest = 'bed_file', 
+                            type = argparse.FileType('r'), 
+                            help = (
+                                'A 6-column tab-separated bed file, 
+                                'with columns of form: '
+                                '"chrom start end name score strand" '
+                                'Mutually exclusive with --fasta. '
+                                'Requires --fi.'
+                            ))
+    
+    parser.add_argument('--fi', 
+                        metavar = 'reference_fasta_file', 
+                        dest = 'reference_fasta_file', 
+                        default = 'genome.fa', 
                         type = argparse.FileType('r'), 
                         help = (
-                            'A scored fasta file, '
-                            'where sequence headers are of form: \n'
-                            '>sequence_name sequence_score'
+                            'A reference fasta file for use with bed_file. '
+                            'Sequences will be extracted from this fasta '
+                            'using coordinates from bed_file. '
+                            'Required if using --bed. '
+                            'Defaults to "genome.fa".'
                         ))
     
     parser.add_argument('motif_matrix_file', 
@@ -60,6 +94,16 @@ def setup_parser(parser):
                             'Set this flag to write motif ' 
                             'scanning results table to ' 
                             'output directory.'
+                        ))
+    
+    parser.add_argument('--html', 
+                        dest = 'save_html', 
+                        action='store_true', 
+                        help = (
+                            'Set this flag to write motif ' 
+                            'html results table to ' 
+                            'output directory. '
+                            'Includes motif weblogos.'
                         ))
     
     parser.add_argument('--kmer', 
@@ -120,8 +164,11 @@ def setup_parser(parser):
     
 def run_meirlop(args):
     scored_fasta_file = args.scored_fasta_file
+    bed_file = args.bed_file
+    reference_fasta_file = args.reference_fasta_file
     motif_matrix_file = args.motif_matrix_file
     save_scan = args.save_scan
+    save_html = args.save_html
     max_k = args.max_k
     use_length = args.use_length
     covariates_table_file = args.covariates_table_file
@@ -131,12 +178,16 @@ def run_meirlop(args):
     
     user_covariates_df = None
     if covariates_table_file is not None:
-        user_covariates_df = pd.read_table(user_covariates_df)
+        user_covariates_df = pd.read_csv(user_covariates_df, sep = '\t')
     
     os.environ['OMP_NUM_THREADS'] = f'{n_jobs}'
     os.environ['MKL_NUM_THREADS'] = f'{n_jobs}'
     
-    sequence_dict, score_dict = read_scored_fasta(scored_fasta_file)[:-1]
+    if scored_fasta_file is not None:
+        sequence_dict, score_dict = read_scored_fasta(scored_fasta_file)[:-1]
+    else if (bed_file is not None) and (reference_fasta_file is not None):
+        sequence_dict, score_dict = get_scored_sequences(bed_file, 
+                                                         reference_fasta_file)
     motif_matrix_dict = read_motif_matrices(motif_matrix_file)[0]
     
     if score_column is not None:
@@ -167,12 +218,26 @@ def run_meirlop(args):
     outpath_lr_input = os.path.normpath(output_dir + '/lr_input.tsv')
     outpath_motif_peak_set_dict = os.path.normpath(output_dir + '/motif_peak_set_dict.p')
     outpath_scan_results = os.path.normpath(output_dir + '/scan_results.tsv')
+    outpath_html_results = os.path.normpath(output_dir + '/lr_results.html')
+    
+    lr_results_df = lr_results_df[['motif_id',
+                                   'coef','abs_coef',
+                                   'std_err',
+                                   'ci_95_pct_lower','ci_95_pct_upper',
+                                   'auc',
+                                   'pval','padj','padj_sig']]
     
     lr_results_df.to_csv(outpath_lr_results, sep = '\t', index = False)
     lr_input_df.to_csv(outpath_lr_input, sep = '\t', index = False)
     if save_scan:
         scan_results_df.to_csv(outpath_scan_results, sep = '\t', index = False)
     pickle.dump(motif_peak_set_dict, open(outpath_motif_peak_set_dict, 'wb'))
+    
+    if save_html:
+        print('exporting html report with sequence logos')
+        html = get_html_for_lr_results_df(lr_results_df, motif_matrix_dict, n_jobs = n_jobs)
+        with open(outpath_html_results, 'w') as html_file:
+            html_file.write(html)
 
 if __name__ == '__main__':
     main()

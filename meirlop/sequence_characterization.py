@@ -2,6 +2,8 @@ import pandas as pd
 import numpy as np
 from joblib import Parallel, delayed
 
+from tqdm import tqdm
+
 def get_background(seq, 
                    alphabet = 'ACGT', 
                    as_counts = False):
@@ -69,7 +71,8 @@ def get_frequency_ratio_df(
     max_k = 2, 
     alphabet = list('ACGT'), 
     n_jobs = 1, 
-    remove_redundant = False):
+    remove_redundant = False, 
+    progress_wrapper = tqdm):
 
     get_frequency_ratio_tup = lambda sequence_id, sequence, k: ((k, sequence_id) 
                                                                 + tuple(compute_frequency_ratio_array(
@@ -79,7 +82,7 @@ def get_frequency_ratio_df(
     frequency_ratio_tups = [Parallel(n_jobs = 20)(delayed(get_frequency_ratio_tup)(sequence_id, 
                                                                                    sequence, k) 
                                                   for sequence_id, sequence 
-                                                  in sequence_dict.items()) 
+                                                  in progress_wrapper(sequence_dict.items())) 
                             for k in range(1, max_k + 1)]
 
     get_frequency_ratio_kmers = lambda k: [number_to_pattern(index, k, alphabet) 
@@ -108,14 +111,14 @@ def get_frequency_ratio_df(
                                                              k, 
                                                              alphabet) 
                            for k in range(1, max_k + 1)]
-        if max_k > 1:
-            columns_to_drop = (columns_to_drop 
-                               + ['kmer_ratio_' + kmer 
-                                  for k in range(2, max_k + 1) 
-                                  for kmer 
-                                  in [number_to_pattern(number, k, alphabet) 
-                                      for number 
-                                      in range(len(alphabet)**k)] 
-                                  if len(set(kmer)) == 1])
+#         if max_k > 1:
+#             columns_to_drop = (columns_to_drop 
+#                                + ['kmer_ratio_' + kmer 
+#                                   for k in range(2, max_k + 1) 
+#                                   for kmer 
+#                                   in [number_to_pattern(number, k, alphabet) 
+#                                       for number 
+#                                       in range(len(alphabet)**k)] 
+#                                   if len(set(kmer)) == 1])
         frequency_ratio_df = frequency_ratio_df.drop(columns = columns_to_drop)
     return frequency_ratio_df

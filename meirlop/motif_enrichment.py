@@ -34,10 +34,10 @@ def analyze_scored_fasta_data_with_lr(
     progress_wrapper = tqdm, 
     n_jobs = 1):
     start = timer()
-    logging.info('importing peak data')
-    logging.info(datetime.datetime.now())
+    print('importing peak data')
+    print(datetime.datetime.now())
     
-    peak_sequence_dict = {k: v 
+    peak_sequence_dict = {k: v.upper() 
                           for 
                           k, v 
                           in sequence_dict.items() 
@@ -56,9 +56,9 @@ def analyze_scored_fasta_data_with_lr(
     
     end = timer()
     runtime = end - start
-    logging.info(f'{runtime} seconds')
-    logging.info(datetime.datetime.now())
-    logging.info('scanning for motifs')
+    print(f'{runtime} seconds')
+    print(datetime.datetime.now())
+    print('scanning for motifs')
     bg = get_background(''.join(peak_sequence_dict.values()), 
                         alphabet = alphabet, 
                         as_counts = False)
@@ -68,7 +68,8 @@ def analyze_scored_fasta_data_with_lr(
                                         bg = bg, 
                                         pval = pval, 
                                         pseudocount = pseudocount, 
-                                        n_jobs = n_jobs)
+                                        n_jobs = n_jobs, 
+                                        progress_wrapper = progress_wrapper)
     (scan_results_df, 
      motif_peak_set_dict) = format_scan_results(scan_results)
     
@@ -78,16 +79,17 @@ def analyze_scored_fasta_data_with_lr(
 
         end = timer()
         runtime = end - start
-        logging.info(f'{runtime} seconds')
-        logging.info(datetime.datetime.now())
-        logging.info('calculating kmer frequency ratios')
+        print(f'{runtime} seconds')
+        print(datetime.datetime.now())
+        print('calculating kmer frequency ratios')
 
         frequency_ratio_df = get_frequency_ratio_df(
             sequence_dict, 
             alphabet = alphabet, 
             max_k = max_k, 
             n_jobs = n_jobs, 
-            remove_redundant = True)
+            remove_redundant = True, 
+            progress_wrapper = progress_wrapper)
         frequency_ratio_df = (frequency_ratio_df
                               .rename(
                                   columns = {'sequence_id': 'peak_id'}
@@ -130,9 +132,9 @@ def analyze_scored_fasta_data_with_lr(
     lr_input_df = peak_score_df.merge(covariates_df)
     end = timer()
     runtime = end - start
-    logging.info(f'{runtime} seconds')
-    logging.info(datetime.datetime.now())
-    logging.info('performing logistic regression')
+    print(f'{runtime} seconds')
+    print(datetime.datetime.now())
+    print('performing logistic regression')
     
     
     lr_results_df = analyze_peaks_with_lr(
@@ -146,9 +148,9 @@ def analyze_scored_fasta_data_with_lr(
     
     end = timer()
     runtime = end - start
-    logging.info(f'{runtime} seconds')
-    logging.info(datetime.datetime.now())
-    logging.info('returning logistic regression results')
+    print(f'{runtime} seconds')
+    print(datetime.datetime.now())
+    print('returning logistic regression results')
     
     return lr_results_df, lr_input_df, motif_peak_set_dict, scan_results_df
 

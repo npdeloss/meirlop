@@ -5,7 +5,7 @@ from setuptools.command.test import test as TestCommand
 
 
 
-__version__='0.0.2'
+__version__='0.0.3'
 
 # if sys.argv[-1] == 'publish':
 #     os.system("python setup.py sdist bdist_wheel register upload")
@@ -46,6 +46,7 @@ setup(name='meirlop',
       },
       install_requires=[
                         'biopython',
+                        'pybedtools',
                         'joblib',
                         'moods-python',
                         'numpy',

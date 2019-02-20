@@ -1,10 +1,13 @@
+import pandas as pd
 import numpy as np
 
 from Bio import SeqIO
 import Bio.motifs.jaspar as jaspar
 
+from pybedtools import BedTool
+
 def read_fasta(fasta_file, chromsizes = False):
-    fa_dict = {sequence.id: str(sequence.seq) 
+    fa_dict = {sequence.id: str(sequence.seq).upper()
                for sequence 
                in SeqIO.parse(fasta_file,'fasta')}
     if chromsizes:
@@ -14,6 +17,37 @@ def read_fasta(fasta_file, chromsizes = False):
         return fa_dict, fa_chromsizes_dict
     else:
         return fa_dict
+
+def get_scored_sequences(bed_file,
+                         reference_fasta_file):
+    reference_fa_bt = BedTool(reference_fasta_file.name)
+    bed_bt = BedTool(bed_file.name)
+    sequence_lines = [line.strip() 
+                      for line 
+                      in open(peak_bt
+                              .sequence(fi = reference_fa_bt, 
+                                        tab = True, s = True, 
+                                        name = True)
+                              .seqfn).readlines()]
+    sequence_dict = {('('.join(line
+                               .strip()
+                               .split('(')[:-1])): 
+                     (line
+                      .split('\t')[1]
+                      .strip()) 
+                     for line 
+                     in sequence_lines}
+    bed_df = pd.read_csv(bed_file, sep = '\t', 
+                         header = None, 
+                         names = ['chr', 
+                                  'start', 
+                                  'end', 
+                                  'name', 
+                                  'score', 
+                                  'strand'],
+                         comment = '#')
+    score_dict = bed_df.set_index('name')['score'].to_dict()
+    return sequence_dict, score_dict
 
 def write_scored_fasta(sequence_dict, 
                        score_dict, 
@@ -41,7 +75,7 @@ def write_scored_fasta(sequence_dict,
 
 def read_scored_fasta(fasta_file, description_delim = ' '):
     fasta_records = list(SeqIO.parse(fasta_file, 'fasta'))
-    sequence_dict = {rec.id: str(rec.seq)
+    sequence_dict = {rec.id: str(rec.seq).upper()
                      for rec
                      in fasta_records}
     description_dict = {rec.id: tuple(rec

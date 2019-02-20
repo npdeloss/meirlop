@@ -5,6 +5,8 @@ import MOODS.scan
 import MOODS.tools
 import MOODS.parsers
 
+from tqdm import tqdm
+
 def get_motif_fwd_rev_matrices(motif_matrix_dict):
     motif_fwd_matrix_dict = {(motif_id, '+'): motif_matrix
                              for motif_id, motif_matrix
@@ -41,7 +43,8 @@ def scan_motifs(motif_matrix_dict,
                 bg = (0.25, 0.25, 0.25, 0,25),
                 pval = 0.001,
                 pseudocount = 0.001,
-                window_size = 7):
+                window_size = 7, 
+                progress_wrapper = tqdm):
     
     motif_fwd_rev_matrix_dict = get_motif_fwd_rev_matrices(motif_matrix_dict)
     
@@ -67,7 +70,7 @@ def scan_motifs(motif_matrix_dict,
     
     results = [(peak_id,) + motif_ids[i] + (result.pos, result.score)
                for peak_id, seq
-               in peak_sequence_dict.items()
+               in progress_wrapper(peak_sequence_dict.items())
                for i, results
                in enumerate(scanner.scan(seq))
                for result
@@ -87,7 +90,8 @@ def scan_motifs_parallel(motif_matrix_dict,
                          pval = 0.001,
                          pseudocount = 0.001,
                          window_size = 7, 
-                         n_jobs = 1):
+                         n_jobs = 1, 
+                         progress_wrapper = tqdm):
     peak_ids_by_chunk = chunk_list(peak_sequence_dict.keys(), n_jobs)
     peak_sequence_dicts_by_chunk = [{peak_id: peak_sequence_dict[peak_id] 
                                      for peak_id in chunk} 
@@ -98,7 +102,8 @@ def scan_motifs_parallel(motif_matrix_dict,
         bg,
         pval,
         pseudocount,
-        window_size) 
+        window_size, 
+        progress_wrapper) 
                                                  for peak_sequence_dict_of_chunk 
                                                  in peak_sequence_dicts_by_chunk)
     result_tups = [result_tup 
