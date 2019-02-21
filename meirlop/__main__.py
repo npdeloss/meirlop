@@ -20,6 +20,8 @@ def main():
                                      ))
     setup_parser(parser)
     args = parser.parse_args()
+    if args.bed_file and (args.reference_fasta_file is None):
+        parser.error('--bed requires --fi')
     args.func(args)
 
 def setup_parser(parser):
@@ -41,7 +43,7 @@ def setup_parser(parser):
                             dest = 'bed_file', 
                             type = argparse.FileType('r'), 
                             help = (
-                                'A 6-column tab-separated bed file, 
+                                'A 6-column tab-separated bed file, '
                                 'with columns of form: '
                                 '"chrom start end name score strand" '
                                 'Mutually exclusive with --fasta. '
@@ -51,14 +53,12 @@ def setup_parser(parser):
     parser.add_argument('--fi', 
                         metavar = 'reference_fasta_file', 
                         dest = 'reference_fasta_file', 
-                        default = 'genome.fa', 
                         type = argparse.FileType('r'), 
                         help = (
                             'A reference fasta file for use with bed_file. '
                             'Sequences will be extracted from this fasta '
                             'using coordinates from bed_file. '
                             'Required if using --bed. '
-                            'Defaults to "genome.fa".'
                         ))
     
     parser.add_argument('motif_matrix_file', 
@@ -185,7 +185,7 @@ def run_meirlop(args):
     
     if scored_fasta_file is not None:
         sequence_dict, score_dict = read_scored_fasta(scored_fasta_file)[:-1]
-    else if (bed_file is not None) and (reference_fasta_file is not None):
+    elif (bed_file is not None) and (reference_fasta_file is not None):
         sequence_dict, score_dict = get_scored_sequences(bed_file, 
                                                          reference_fasta_file)
     motif_matrix_dict = read_motif_matrices(motif_matrix_file)[0]

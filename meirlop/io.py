@@ -24,7 +24,7 @@ def get_scored_sequences(bed_file,
     bed_bt = BedTool(bed_file.name)
     sequence_lines = [line.strip() 
                       for line 
-                      in open(peak_bt
+                      in open(bed_bt
                               .sequence(fi = reference_fa_bt, 
                                         tab = True, s = True, 
                                         name = True)
@@ -34,7 +34,8 @@ def get_scored_sequences(bed_file,
                                .split('(')[:-1])): 
                      (line
                       .split('\t')[1]
-                      .strip()) 
+                      .strip()
+                      .upper()) 
                      for line 
                      in sequence_lines}
     bed_df = pd.read_csv(bed_file, sep = '\t', 
@@ -46,6 +47,7 @@ def get_scored_sequences(bed_file,
                                   'score', 
                                   'strand'],
                          comment = '#')
+    bed_df['score'] = bed_df['score'].astype('float')
     score_dict = bed_df.set_index('name')['score'].to_dict()
     return sequence_dict, score_dict
 
