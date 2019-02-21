@@ -18,7 +18,7 @@ usage: meirlop [-h] (--fa scored_fasta_file | --bed bed_file)
 Determine enrichment of motifs in a list of scored sequences.
 
 positional arguments:
-  motif_matrix_file     A motif matrix file in JASPAR format.
+  motif_matrix_file     A motif matrices file in JASPAR format.
   output_dir            Create this directory and write output to it.
 
 optional arguments:
@@ -26,10 +26,10 @@ optional arguments:
   --fa scored_fasta_file
                         A scored fasta file, where sequence headers are of
                         form: ">sequence_name sequence_score". Mutually
-                        exclusive with --bed. Defaults to "peaks.fa".
+                        exclusive with --bed.
   --bed bed_file        A 6-column tab-separated bed file, with columns of
                         form: "chrom start end name score strand" Mutually
-                        exclusive with --fasta. Requires --fi.
+                        exclusive with --fa. Requires --fi.
   --fi reference_fasta_file
                         A reference fasta file for use with bed_file.
                         Sequences will be extracted from this fasta using

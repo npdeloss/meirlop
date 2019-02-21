@@ -35,7 +35,6 @@ def setup_parser(parser):
                                 'where sequence headers are of form: \n'
                                 '">sequence_name sequence_score". '
                                 'Mutually exclusive with --bed. '
-                                'Defaults to "peaks.fa".'
                             ))
     
     input_type.add_argument('--bed', 
@@ -46,7 +45,7 @@ def setup_parser(parser):
                                 'A 6-column tab-separated bed file, '
                                 'with columns of form: '
                                 '"chrom start end name score strand" '
-                                'Mutually exclusive with --fasta. '
+                                'Mutually exclusive with --fa. '
                                 'Requires --fi.'
                             ))
     
@@ -65,7 +64,7 @@ def setup_parser(parser):
                         metavar = 'motif_matrix_file', 
                         type = argparse.FileType('r'), 
                         help = (
-                            'A motif matrix file '
+                            'A motif matrices file '
                             'in JASPAR format.'
                         ))
     
