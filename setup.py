@@ -47,6 +47,7 @@ setup(name='meirlop',
       install_requires=[
                         'biopython',
                         'pybedtools',
+                        'weblogo',
                         'joblib',
                         'moods-python',
                         'numpy',
