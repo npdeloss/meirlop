@@ -11,8 +11,10 @@ Assuming bioconda is not in your channels.
 ```
 usage: meirlop [-h] (--fa scored_fasta_file | --bed bed_file)
                [--fi reference_fasta_file] [--jobs jobs] [--scan] [--html]
-               [--kmer max_k] [--length] [--covariates covariates_table_file]
-               [--score score_column]
+               [--kmer max_k] [--length] [--gc]
+               [--covariates covariates_table_file] [--score score_column]
+               [--pval scan_pval_threshold] [--pcount scan_pseudocount]
+               [--padj logistic_regression_padj_threshold]
                motif_matrix_file output_dir
 
 Determine enrichment of motifs in a list of scored sequences.
@@ -46,6 +48,9 @@ optional arguments:
                         covariate in logistic regression. Default = 2
   --length              Set this flag to incorporate sequence length as a
                         covariate in logistic regression.
+  --gc                  Set this flag to incorporate GC content as a covariate
+                        in logistic regression. Recommend setting --kmer to 0
+                        if using --gc.
   --covariates covariates_table_file
                         Supply an optional tab-separated file containing
                         additional covariates to incorporate in logistic
@@ -55,4 +60,13 @@ optional arguments:
                         sequence score. Use if you don't want to include score
                         in your FASTA file. By default, sequence score is
                         drawn from the FASTA sequence header.
+  --pval scan_pval_threshold
+                        Set p-value threshold for motif scanning hits on
+                        sequences. Defaults to 0.001.
+  --pcount scan_pseudocount
+                        Set motif matrix pseudocount for motif scanning on
+                        sequences. Defaults to 0.001.
+  --padj logistic_regression_padj_threshold
+                        Set adjusted p-value threshold for logistic regression
+                        results. Defaults to 0.05.
 ```

@@ -127,6 +127,17 @@ def setup_parser(parser):
                             'in logistic regression. '
                         ))
     
+    parser.add_argument('--gc', 
+                        dest = 'use_gc', 
+                        action='store_true', 
+                        help = (
+                            'Set this flag to incorporate '
+                            'GC content as a covariate '
+                            'in logistic regression. '
+                            'Recommend setting --kmer to 0 '
+                            'if using --gc.'
+                        ))
+    
     parser.add_argument('--covariates', 
                         metavar = 'covariates_table_file', 
                         dest = 'covariates_table_file', 
@@ -159,6 +170,39 @@ def setup_parser(parser):
                             
                         ))
     
+    parser.add_argument('--pval', 
+                        metavar = 'scan_pval_threshold', 
+                        dest = 'pval', 
+                        default = 0.001, 
+                        type = float, 
+                        help = (
+                            'Set p-value threshold for ' 
+                            'motif scanning hits on sequences. '
+                            'Defaults to 0.001.'
+                        ))
+    
+    parser.add_argument('--pcount', 
+                        metavar = 'scan_pseudocount', 
+                        dest = 'pseudocount', 
+                        default = 0.001, 
+                        type = float, 
+                        help = (
+                            'Set motif matrix pseudocount for ' 
+                            'motif scanning on sequences. '
+                            'Defaults to 0.001.'
+                        ))
+    
+    parser.add_argument('--padj', 
+                        metavar = 'logistic_regression_padj_threshold', 
+                        dest = 'padj_thresh', 
+                        default = 0.05, 
+                        type = float, 
+                        help = (
+                            'Set adjusted p-value threshold for ' 
+                            'logistic regression results. '
+                            'Defaults to 0.05.'
+                        ))
+    
     parser.set_defaults(func = run_meirlop)
     
 def run_meirlop(args):
@@ -170,10 +214,15 @@ def run_meirlop(args):
     save_html = args.save_html
     max_k = args.max_k
     use_length = args.use_length
+    use_gc = args.use_gc
     covariates_table_file = args.covariates_table_file
     output_dir = args.output_dir
     score_column = args.score_column
     n_jobs = args.jobs
+    pval = args.pval
+    pseudocount = args.pseudocount
+    padj_thresh = args.padj_thresh
+    
     
     user_covariates_df = None
     if covariates_table_file is not None:
@@ -207,6 +256,10 @@ def run_meirlop(args):
         motif_matrix_dict, 
         max_k = max_k, 
         use_length = use_length, 
+        use_gc = use_gc, 
+        pval = pval, 
+        pseudocount = pseudocount, 
+        padj_thresh = padj_thresh, 
         n_jobs = n_jobs)
     
     outpath = os.path.normpath(output_dir)

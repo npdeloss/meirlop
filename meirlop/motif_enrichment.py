@@ -27,8 +27,10 @@ def analyze_scored_fasta_data_with_lr(
     pseudocount = 0.001, 
     max_k = 2, 
     use_length = False, 
+    use_gc = False, 
     user_covariates_df = None, 
     padj_method = 'fdr_bh', 
+    padj_thresh = 0.05, 
     min_set_size = 1, 
     max_set_size = np.inf, 
     progress_wrapper = tqdm, 
@@ -106,6 +108,28 @@ def analyze_scored_fasta_data_with_lr(
                                    'peak_length')
         peak_length_df = peak_length_df.sort_values(by = 'peak_id')
         covariate_dfs.append(peak_length_df)
+    if use_gc:
+        end = timer()
+        runtime = end - start
+        print(f'{runtime} seconds')
+        print(datetime.datetime.now())
+        print('calculating GC ratios')
+
+        gc_ratio_df = get_frequency_ratio_df(
+            sequence_dict, 
+            alphabet = alphabet, 
+            max_k = 1, 
+            n_jobs = n_jobs, 
+            remove_redundant = False, 
+            progress_wrapper = progress_wrapper)
+        gc_ratio_df = (gc_ratio_df
+                              .rename(
+                                  columns = {'sequence_id': 'peak_id'}
+                              ))
+        gc_ratio_df = gc_ratio_df.sort_values(by = 'peak_id')
+        gc_ratio_df['ratio_gc'] = gc_ratio_df['kmer_ratio_G'] + gc_ratio_df['kmer_ratio_C']
+        gc_ratio_df = gc_ratio_df[['peak_id', 'ratio_gc']].copy()
+        covariate_dfs.append(gc_ratio_df)
     if user_covariates_df is not None:
         user_covariates_df_cp = user_covariates_df.copy()
         user_covariates_df_columns = list(user_covariates_df_cp.columns)
@@ -136,12 +160,12 @@ def analyze_scored_fasta_data_with_lr(
     print(datetime.datetime.now())
     print('performing logistic regression')
     
-    
     lr_results_df = analyze_peaks_with_lr(
         peak_score_df, 
         motif_peak_set_dict, 
         covariates_df, 
         padj_method = padj_method, 
+        padj_thresh = padj_thresh, 
         min_set_size = min_set_size, 
         max_set_size = max_set_size, 
         progress_wrapper = tqdm)
@@ -164,6 +188,7 @@ def analyze_peaks_with_lr(peak_score_df,
                           peak_set_dict,
                           peak_covariates_df = None,
                           padj_method = 'fdr_bh',
+                          padj_thresh = 0.05,
                           min_set_size = 1,
                           max_set_size = np.inf,
                           progress_wrapper = tqdm):
@@ -202,7 +227,7 @@ def analyze_peaks_with_lr(peak_score_df,
     results_df['padj'] = mt(results_df['pval'], 
                             method = padj_method)[1]
     
-    results_df['padj_sig'] = ((results_df['padj'] < 0.05)
+    results_df['padj_sig'] = ((results_df['padj'] < padj_thresh)
                               .astype(int))
     results_df['abs_coef'] = np.abs(results_df['coef'])
     results_df = results_df.sort_values(by = ['abs_coef', 
