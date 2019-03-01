@@ -21,6 +21,7 @@ def get_html_logo_for_motif_matrix(motif_matrix):
 
 def get_html_for_lr_results_df(lr_results_df, 
                                motif_matrix_dict, 
+                               name = '', 
                                n_jobs = 1, 
                                progress_wrapper = tqdm):
     df = (lr_results_df.copy()
@@ -49,7 +50,7 @@ def get_html_for_lr_results_df(lr_results_df,
     <head>
     <meta charset="UTF-8">
     <title>
-    Motif Enrichment Logistic Regression Results - MEIRLOP
+    {name} Motif Enrichment Logistic Regression Results - MEIRLOP
     </title>
     <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.1.1/css/bootstrap.min.css"/>
     <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.18/css/dataTables.bootstrap4.min.css"/>

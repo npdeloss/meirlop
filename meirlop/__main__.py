@@ -287,7 +287,7 @@ def run_meirlop(args):
     
     if save_html:
         print('exporting html report with sequence logos')
-        html = get_html_for_lr_results_df(lr_results_df, motif_matrix_dict, n_jobs = n_jobs)
+        html = get_html_for_lr_results_df(lr_results_df, motif_matrix_dict, output_dir, n_jobs = n_jobs)
         with open(outpath_html_results, 'w') as html_file:
             html_file.write(html)
 

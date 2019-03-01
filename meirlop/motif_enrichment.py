@@ -146,12 +146,13 @@ def analyze_scored_fasta_data_with_lr(
         user_covariates_df_cp = (user_covariates_df_cp
                                  .sort_values(by = 'peak_id'))
         covariate_dfs.append(user_covariates_df_cp)
-    
-    covariates_df = pd.concat([(df
-                                .set_index('peak_id')) 
-                               for df 
-                               in covariate_dfs], 
-                              axis = 1).reset_index()
+    covariates_df = None
+    if len(covariate_dfs) == 0:
+        covariates_df = pd.concat([(df
+                                    .set_index('peak_id')) 
+                                   for df 
+                                   in covariate_dfs], 
+                                  axis = 1).reset_index()
     
     lr_input_df = peak_score_df.merge(covariates_df)
     end = timer()
