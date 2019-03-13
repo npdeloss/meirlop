@@ -102,7 +102,7 @@ def analyze_scored_fasta_data_with_lr(
     if use_length:
         peak_length_dict = {k: len(v) 
                             for k,v 
-                            in peak_sequence_dict}
+                            in peak_sequence_dict.items()}
         peak_length_df = dict_to_df(peak_length_dict, 
                                    'peak_id', 
                                    'peak_length')
@@ -171,7 +171,8 @@ def analyze_scored_fasta_data_with_lr(
         min_set_size = min_set_size, 
         max_set_size = max_set_size, 
         progress_wrapper = tqdm)
-    
+    motif_num_peaks_dict = {k: len(set(v)) for k, v in motif_peak_set_dict.items()}
+    lr_results_df['num_peaks'] = lr_results_df['motif_id'].map(motif_num_peaks_dict)
     end = timer()
     runtime = end - start
     print(f'{runtime} seconds')

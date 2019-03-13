@@ -3,7 +3,7 @@ import sys
 import os
 import os.path
 import pickle
-
+import json
 from tqdm import tqdm
 
 from . import analyze_scored_fasta_data_with_lr
@@ -269,6 +269,7 @@ def run_meirlop(args):
     outpath_lr_results = os.path.normpath(output_dir + '/lr_results.tsv')
     outpath_lr_input = os.path.normpath(output_dir + '/lr_input.tsv')
     outpath_motif_peak_set_dict = os.path.normpath(output_dir + '/motif_peak_set_dict.p')
+    outpath_motif_peak_set_json = os.path.normpath(output_dir + '/motif_peak_set_dict.json')
     outpath_scan_results = os.path.normpath(output_dir + '/scan_results.tsv')
     outpath_html_results = os.path.normpath(output_dir + '/lr_results.html')
     
@@ -277,13 +278,16 @@ def run_meirlop(args):
                                    'std_err',
                                    'ci_95_pct_lower','ci_95_pct_upper',
                                    'auc',
-                                   'pval','padj','padj_sig']]
+                                   'pval','padj','padj_sig', 'num_peaks']]
     
     lr_results_df.to_csv(outpath_lr_results, sep = '\t', index = False)
     lr_input_df.to_csv(outpath_lr_input, sep = '\t', index = False)
     if save_scan:
         scan_results_df.to_csv(outpath_scan_results, sep = '\t', index = False)
-    pickle.dump(motif_peak_set_dict, open(outpath_motif_peak_set_dict, 'wb'))
+    with open(outpath_motif_peak_set_dict, 'wb') as outpath_motif_peak_set_dict_file:
+        pickle.dump(motif_peak_set_dict, outpath_motif_peak_set_dict_file)
+    with open(outpath_motif_peak_set_json, 'w') as outpath_motif_peak_set_json_file:
+        json.dump(motif_peak_set_dict, outpath_motif_peak_set_json_file)
     
     if save_html:
         print('exporting html report with sequence logos')

@@ -40,7 +40,7 @@ def get_html_for_lr_results_df(lr_results_df,
              'std_err',
              'ci_95_pct_lower','ci_95_pct_upper',
              'auc',
-             'pval','padj','padj_sig']]
+             'pval','padj','padj_sig', 'num_peaks']]
     old_width = pd.get_option('display.max_colwidth')
     pd.set_option('display.max_colwidth', -1)
     df_html = df.to_html(escape = False)
