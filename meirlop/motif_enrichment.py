@@ -13,6 +13,7 @@ from statsmodels.stats.multitest import multipletests as mt
 
 from sklearn.metrics import roc_auc_score
 from sklearn.preprocessing import StandardScaler
+from sklearn.decomposition import PCA
 
 from .sequence_characterization import get_background, get_frequency_ratio_df
 from .motif_scanning import scan_motifs_parallel, format_scan_results
@@ -86,7 +87,7 @@ def analyze_scored_fasta_data_with_lr(
         print('calculating kmer frequency ratios')
 
         frequency_ratio_df = get_frequency_ratio_df(
-            sequence_dict, 
+            peak_sequence_dict, 
             alphabet = alphabet, 
             max_k = max_k, 
             n_jobs = n_jobs, 
@@ -97,16 +98,20 @@ def analyze_scored_fasta_data_with_lr(
                                   columns = {'sequence_id': 'peak_id'}
                               ))
         frequency_ratio_df = frequency_ratio_df.sort_values(by = 'peak_id')
+        # debug
+        # frequency_ratio_df.to_csv('frequency_ratio_df.tsv', sep = '\t')
         covariate_dfs.append(frequency_ratio_df)
 
     if use_length:
-        peak_length_dict = {k: len(v) 
+        peak_length_dict = {k: len(v)*1.0
                             for k,v 
                             in peak_sequence_dict.items()}
         peak_length_df = dict_to_df(peak_length_dict, 
                                    'peak_id', 
                                    'peak_length')
         peak_length_df = peak_length_df.sort_values(by = 'peak_id')
+        # debug
+        # peak_length_df.to_csv('peak_length_df.tsv', sep = '\t')
         covariate_dfs.append(peak_length_df)
     if use_gc:
         end = timer()
@@ -116,7 +121,7 @@ def analyze_scored_fasta_data_with_lr(
         print('calculating GC ratios')
 
         gc_ratio_df = get_frequency_ratio_df(
-            sequence_dict, 
+            peak_sequence_dict, 
             alphabet = alphabet, 
             max_k = 1, 
             n_jobs = n_jobs, 
@@ -148,12 +153,18 @@ def analyze_scored_fasta_data_with_lr(
         covariate_dfs.append(user_covariates_df_cp)
     covariates_df = None
     lr_input_df = peak_score_df
+    # print('number of covariates dfs used:')
+    # print(len(covariate_dfs))
     if len(covariate_dfs) > 0:
         covariates_df = pd.concat([(df
                                     .set_index('peak_id')) 
                                    for df 
                                    in covariate_dfs], 
                                   axis = 1).reset_index()
+        # debug
+        # covariates_df.to_csv('covariates_df.tsv', sep = '\t')
+        # debug
+        # peak_score_df.to_csv('peak_score_df.tsv', sep = '\t')
         lr_input_df = peak_score_df.merge(covariates_df)
     
     end = timer()
@@ -240,7 +251,8 @@ def analyze_peaks_with_lr(peak_score_df,
     return results_df
 
 def preprocess_lr_df(peak_score_df, 
-                     peak_covariates_df = None):
+                     peak_covariates_df = None, 
+                     num_pca_components = 0.99):
     if peak_covariates_df is None:
         peak_data_df = peak_score_df.copy()
         peak_id_colname = peak_score_df.columns[0]
@@ -257,10 +269,35 @@ def preprocess_lr_df(peak_score_df,
                                       + peak_covariate_colnames])
     lr_df = pd.DataFrame(X, columns = [peak_score_colname] 
                          + peak_covariate_colnames)
+    
     lr_df.insert(0, 
                  peak_id_colname, 
-                 peak_score_df[peak_id_colname])
-    # lr_df['intercept'] = 1.0
+                 peak_data_df[peak_id_colname])
+    
+    if len(peak_covariate_colnames) > 1:
+        lr_score_df = lr_df[peak_score_df.columns]
+        lr_covariates_df = lr_df[[peak_id_colname] + peak_covariate_colnames]
+        lr_covariates_df.head()
+        X_df = lr_covariates_df.set_index(peak_id_colname)
+        pca = PCA(n_components = num_pca_components)
+        pca.fit(X_df)
+        pca_X = pca.transform(X_df)
+        pca_ss = StandardScaler(with_mean = True, with_std = True)
+        pca_X_ss = pca_ss.fit_transform(pca_X)
+        pca_covariates_df = pd.DataFrame(pca_X_ss, index = X_df.index, 
+                                         columns = [f'pc_{i}' 
+                                                    for i 
+                                                    in range(pca_X.shape[1])])
+        n_pca_cols = pca_covariates_df.shape[1]
+        print(f'Reduced covariates to {n_pca_cols} principal components')
+        if (0 < num_pca_components) and (num_pca_components < 1):
+            pct_variance = 100.0 * num_pca_components
+            print((f'Components were chosen to explain ' 
+                   f'{pct_variance}% of variance in covariates'))
+        pca_covariates_df = pca_covariates_df.reset_index(drop = False)
+        lr_df = lr_score_df.merge(pca_covariates_df)
+        
+    lr_df['intercept'] = 1.0
     return lr_df
 
 def compute_logit_regression_for_peak_set(peak_set,
@@ -287,4 +324,3 @@ def compute_logit_regression_for_peak_set(peak_set,
                         y_score = y_score)
     
     return coef, std_err, ci_95_pct_lower, ci_95_pct_upper, pval, auc, result
-

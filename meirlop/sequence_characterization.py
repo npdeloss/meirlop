@@ -83,7 +83,8 @@ def get_frequency_ratio_df(
                                                                                    sequence, k) 
                                                   for sequence_id, sequence 
                                                   in progress_wrapper(sequence_dict.items())) 
-                            for k in range(1, max_k + 1)]
+                            for k in [max_k]]
+                            # for k in range(1, max_k + 1)]
 
     get_frequency_ratio_kmers = lambda k: [number_to_pattern(index, k, alphabet) 
                                            for index 
@@ -95,7 +96,8 @@ def get_frequency_ratio_df(
                                                    in get_frequency_ratio_kmers(k)])
 
     get_frequency_ratio_df_from_tup = lambda k: pd.DataFrame(
-        frequency_ratio_tups[k-1], 
+        frequency_ratio_tups[0], 
+        # frequency_ratio_tups[k-1], 
         columns = get_frequency_ratio_df_columns(k))
 
     frequency_ratio_dfs = [(get_frequency_ratio_df_from_tup(k)
@@ -103,14 +105,17 @@ def get_frequency_ratio_df(
                             .set_index('sequence_id')
                             .drop(columns = ['k'])) 
                            for k 
-                           in range(1, max_k + 1)]
-
-    frequency_ratio_df = pd.concat(frequency_ratio_dfs, axis = 1).reset_index()
+                           in [max_k]]
+                           # in range(1, max_k + 1)]
+    
+    frequency_ratio_df = frequency_ratio_dfs[0].reset_index()
+    # frequency_ratio_df = pd.concat(frequency_ratio_dfs, axis = 1).reset_index()
     if remove_redundant:
         columns_to_drop = ['kmer_ratio_' + number_to_pattern((len(alphabet)**k)-1, 
                                                              k, 
                                                              alphabet) 
-                           for k in range(1, max_k + 1)]
+                           for k in [max_k]]
+                           # for k in range(1, max_k + 1)]
 #         if max_k > 1:
 #             columns_to_drop = (columns_to_drop 
 #                                + ['kmer_ratio_' + kmer 
