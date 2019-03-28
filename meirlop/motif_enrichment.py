@@ -32,7 +32,7 @@ def analyze_scored_fasta_data_with_lr(
     user_covariates_df = None, 
     padj_method = 'fdr_bh', 
     padj_thresh = 0.05, 
-    min_set_size = 1, 
+    min_set_size = 2, 
     max_set_size = np.inf, 
     progress_wrapper = tqdm, 
     n_jobs = 1):
@@ -173,14 +173,19 @@ def analyze_scored_fasta_data_with_lr(
     print(datetime.datetime.now())
     print('performing logistic regression')
     
+    min_frac_set_size = 10.0**-3
+    max_frac_set_size = 1.0 - min_frac_set_size
+    adj_min_set_size = max(3, int(np.round(len(peak_sequence_dict)*min_frac_set_size)))
+    adj_max_set_size = min(len(peak_sequence_dict)-3, int(np.round(len(peak_sequence_dict)*max_frac_set_size)))
+    
     lr_results_df = analyze_peaks_with_lr(
         peak_score_df, 
         motif_peak_set_dict, 
         covariates_df, 
         padj_method = padj_method, 
         padj_thresh = padj_thresh, 
-        min_set_size = min_set_size, 
-        max_set_size = max_set_size, 
+        min_set_size = adj_min_set_size, 
+        max_set_size = adj_max_set_size, 
         progress_wrapper = tqdm)
     motif_num_peaks_dict = {k: len(set(v)) for k, v in motif_peak_set_dict.items()}
     lr_results_df['num_peaks'] = lr_results_df['motif_id'].map(motif_num_peaks_dict)

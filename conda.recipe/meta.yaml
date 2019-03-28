@@ -1,6 +1,6 @@
 package:
   name: meirlop
-  version: "0.0.7a"
+  version: "0.0.7b"
 
 source:
   path: ..
