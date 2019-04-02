@@ -139,7 +139,7 @@ def setup_parser(parser):
                             'GC content as a covariate '
                             'in logistic regression. '
                             'Recommend setting --kmer to 0 '
-                            'if using --gc.'
+                            'if using --gc. '
                             'Multiple covariates will be reduced '
                             'to principal components.'
                         ))
@@ -157,7 +157,7 @@ def setup_parser(parser):
                             'Columns should be labeled, '
                             'and the first column should '
                             'match sequence names in '
-                            'the fasta file.'
+                            'the fasta file. '
                             'Multiple covariates will be reduced '
                             'to principal components.'
                         ))

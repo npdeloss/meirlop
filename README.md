@@ -43,19 +43,24 @@ optional arguments:
                         output directory.
   --html                Set this flag to write motif html results table to
                         output directory. Includes motif weblogos.
-  --kmer max_k          Set maximum length of kmers to consider during
-                        regression. Frequency of kmers will be used as a
-                        covariate in logistic regression. Default = 2
+  --kmer max_k          Set length of kmers to consider during regression.
+                        Principal components based on frequency of kmers will
+                        be used as a covariates in logistic regression. Set to
+                        0 to disable. Default = 2
   --length              Set this flag to incorporate sequence length as a
-                        covariate in logistic regression.
+                        covariate in logistic regression. Multiple covariates
+                        will be reduced to principal components.
   --gc                  Set this flag to incorporate GC content as a covariate
                         in logistic regression. Recommend setting --kmer to 0
-                        if using --gc.
+                        if using --gc. Multiple covariates will be reduced to
+                        principal components.
   --covariates covariates_table_file
                         Supply an optional tab-separated file containing
                         additional covariates to incorporate in logistic
                         regression. Columns should be labeled, and the first
                         column should match sequence names in the fasta file.
+                        Multiple covariates will be reduced to principal
+                        components.
   --score score_column  Name a column in covariates_table_file to use as the
                         sequence score. Use if you don't want to include score
                         in your FASTA file. By default, sequence score is
