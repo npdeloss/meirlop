@@ -111,10 +111,12 @@ def setup_parser(parser):
                         type = int, 
                         default = 2, 
                         help = (
-                            'Set maximum length of kmers to '
+                            'Set length of kmers to '
                             'consider during regression. '
-                            'Frequency of kmers will be used '
-                            'as a covariate in logistic regression. '
+                            'Principal components based on '
+                            'frequency of kmers will be used '
+                            'as a covariates in logistic regression. '
+                            'Set to 0 to disable. '
                             'Default = 2'
                         ))
     
@@ -125,6 +127,8 @@ def setup_parser(parser):
                             'Set this flag to incorporate '
                             'sequence length as a covariate '
                             'in logistic regression. '
+                            'Multiple covariates will be reduced '
+                            'to principal components.'
                         ))
     
     parser.add_argument('--gc', 
@@ -136,6 +140,8 @@ def setup_parser(parser):
                             'in logistic regression. '
                             'Recommend setting --kmer to 0 '
                             'if using --gc.'
+                            'Multiple covariates will be reduced '
+                            'to principal components.'
                         ))
     
     parser.add_argument('--covariates', 
@@ -152,6 +158,8 @@ def setup_parser(parser):
                             'and the first column should '
                             'match sequence names in '
                             'the fasta file.'
+                            'Multiple covariates will be reduced '
+                            'to principal components.'
                         ))
     
     parser.add_argument('--score', 
