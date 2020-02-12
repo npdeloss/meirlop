@@ -1,10 +1,12 @@
 import argparse
 import sys
+import shlex
 import os
 import os.path
 import pickle
 import json
 from tqdm import tqdm
+import pandas as pd
 
 from . import analyze_scored_fasta_data_with_lr
 from . import read_scored_fasta, read_motif_matrices
@@ -103,6 +105,15 @@ def setup_parser(parser):
                             'html results table to ' 
                             'output directory. '
                             'Includes motif weblogos.'
+                        ))
+    
+    parser.add_argument('--norevcomp', 
+                        dest = 'norevcomp', 
+                        action='store_true', 
+                        help = (
+                            'Set this flag to disable ' 
+                            'searching for ' 
+                            'reverse complement of motifs'
                         ))
     
     parser.add_argument('--kmer', 
@@ -220,6 +231,7 @@ def run_meirlop(args):
     motif_matrix_file = args.motif_matrix_file
     save_scan = args.save_scan
     save_html = args.save_html
+    norevcomp = args.norevcomp
     max_k = args.max_k
     use_length = args.use_length
     use_gc = args.use_gc
@@ -231,10 +243,13 @@ def run_meirlop(args):
     pseudocount = args.pseudocount
     padj_thresh = args.padj_thresh
     
+    cmdline = 'meirlop ' + ' '.join(map(shlex.quote, sys.argv[1:]))
+    
+    revcomp = (False==norevcomp)
     
     user_covariates_df = None
     if covariates_table_file is not None:
-        user_covariates_df = pd.read_csv(user_covariates_df, sep = '\t')
+        user_covariates_df = pd.read_csv(covariates_table_file, sep = '\t')
     
     os.environ['OMP_NUM_THREADS'] = f'{n_jobs}'
     os.environ['MKL_NUM_THREADS'] = f'{n_jobs}'
@@ -265,10 +280,12 @@ def run_meirlop(args):
         max_k = max_k, 
         use_length = use_length, 
         use_gc = use_gc, 
+        user_covariates_df = user_covariates_df, 
         pval = pval, 
         pseudocount = pseudocount, 
         padj_thresh = padj_thresh, 
-        n_jobs = n_jobs)
+        n_jobs = n_jobs, 
+        revcomp = revcomp)
     
     outpath = os.path.normpath(output_dir)
     if not os.path.exists(outpath):
@@ -280,6 +297,7 @@ def run_meirlop(args):
     outpath_motif_peak_set_json = os.path.normpath(output_dir + '/motif_peak_set_dict.json')
     outpath_scan_results = os.path.normpath(output_dir + '/scan_results.tsv')
     outpath_html_results = os.path.normpath(output_dir + '/lr_results.html')
+    outpath_cmdline_txt = os.path.normpath(output_dir + '/cmdline.txt')
     
     lr_results_df = lr_results_df[['motif_id',
                                    'coef','abs_coef',
@@ -287,6 +305,9 @@ def run_meirlop(args):
                                    'ci_95_pct_lower','ci_95_pct_upper',
                                    'auc',
                                    'pval','padj','padj_sig', 'num_peaks']]
+    
+    lr_results_df = lr_results_df.sort_values(by = ['padj_sig','coef'], 
+                                              ascending = False)
     
     lr_results_df.to_csv(outpath_lr_results, sep = '\t', index = False)
     lr_input_df.to_csv(outpath_lr_input, sep = '\t', index = False)
@@ -296,10 +317,12 @@ def run_meirlop(args):
         pickle.dump(motif_peak_set_dict, outpath_motif_peak_set_dict_file)
     with open(outpath_motif_peak_set_json, 'w') as outpath_motif_peak_set_json_file:
         json.dump(motif_peak_set_dict, outpath_motif_peak_set_json_file)
+    with open(outpath_cmdline_txt, 'w') as outpath_cmdline_txtfile:
+        outpath_cmdline_txtfile.write(cmdline+'\n')
     
     if save_html:
         print('exporting html report with sequence logos')
-        html = get_html_for_lr_results_df(lr_results_df, motif_matrix_dict, output_dir, n_jobs = n_jobs)
+        html = get_html_for_lr_results_df(lr_results_df, motif_matrix_dict, output_dir, n_jobs = n_jobs, cmdline = cmdline)
         with open(outpath_html_results, 'w') as html_file:
             html_file.write(html)
 

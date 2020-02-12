@@ -1,5 +1,6 @@
 import pandas as pd
 from joblib import Parallel, delayed
+import numpy as np
 
 import MOODS.scan
 import MOODS.tools
@@ -7,13 +8,16 @@ import MOODS.parsers
 
 from tqdm import tqdm
 
-def get_motif_fwd_rev_matrices(motif_matrix_dict):
+def get_motif_fwd_rev_matrices(motif_matrix_dict, revcomp = True):
     motif_fwd_matrix_dict = {(motif_id, '+'): motif_matrix
                              for motif_id, motif_matrix
                              in motif_matrix_dict.items()}
-    motif_rev_matrix_dict = {(motif_id, '-'): MOODS.tools.reverse_complement(motif_matrix)
-                             for motif_id, motif_matrix
-                             in motif_matrix_dict.items()}
+    if revcomp:
+        motif_rev_matrix_dict = {(motif_id, '-'): MOODS.tools.reverse_complement(motif_matrix)
+                                 for motif_id, motif_matrix
+                                 in motif_matrix_dict.items()}
+    else:
+        motif_rev_matrix_dict = {}
     motif_fwd_rev_matrix_dict = {**motif_fwd_matrix_dict, **motif_rev_matrix_dict}
     return motif_fwd_rev_matrix_dict
 
@@ -33,6 +37,11 @@ def get_motif_bg_lo_matrices_thresholds(motif_matrix, bg, pval = 0.01, pseudocou
     motif_lo_matrix_dict = {motif_id: tup[0]
                             for motif_id, tup
                             in motif_lo_matrix_threshold_dict.items()}
+    # debug for nans/infs
+#     print(bg)
+#     print(pval)
+#     print(pseudocount)
+#     print(np.array(list(motif_lo_matrix_dict.values())[0]))
     motif_threshold_dict = {motif_id: tup[1]
                             for motif_id, tup
                             in motif_lo_matrix_threshold_dict.items()}
@@ -44,9 +53,10 @@ def scan_motifs(motif_matrix_dict,
                 pval = 0.001,
                 pseudocount = 0.001,
                 window_size = 7, 
-                progress_wrapper = tqdm):
+                progress_wrapper = tqdm, 
+                revcomp = True):
     
-    motif_fwd_rev_matrix_dict = get_motif_fwd_rev_matrices(motif_matrix_dict)
+    motif_fwd_rev_matrix_dict = get_motif_fwd_rev_matrices(motif_matrix_dict, revcomp = revcomp)
     
     motif_bg_lo_matrices_thresholds = get_motif_bg_lo_matrices_thresholds(
         motif_fwd_rev_matrix_dict,
@@ -91,7 +101,8 @@ def scan_motifs_parallel(motif_matrix_dict,
                          pseudocount = 0.001,
                          window_size = 7, 
                          n_jobs = 1, 
-                         progress_wrapper = tqdm):
+                         progress_wrapper = tqdm, 
+                         revcomp = True):
     peak_ids_by_chunk = chunk_list(peak_sequence_dict.keys(), n_jobs)
     peak_sequence_dicts_by_chunk = [{peak_id: peak_sequence_dict[peak_id] 
                                      for peak_id in chunk} 
@@ -103,7 +114,8 @@ def scan_motifs_parallel(motif_matrix_dict,
         pval,
         pseudocount,
         window_size, 
-        progress_wrapper) 
+        progress_wrapper, 
+        revcomp) 
                                                  for peak_sequence_dict_of_chunk 
                                                  in peak_sequence_dicts_by_chunk)
     result_tups = [result_tup 

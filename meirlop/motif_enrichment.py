@@ -35,7 +35,8 @@ def analyze_scored_fasta_data_with_lr(
     min_set_size = 2, 
     max_set_size = np.inf, 
     progress_wrapper = tqdm, 
-    n_jobs = 1):
+    n_jobs = 1, 
+    revcomp = True):
     start = timer()
     print('importing peak data')
     print(datetime.datetime.now())
@@ -72,7 +73,8 @@ def analyze_scored_fasta_data_with_lr(
                                         pval = pval, 
                                         pseudocount = pseudocount, 
                                         n_jobs = n_jobs, 
-                                        progress_wrapper = progress_wrapper)
+                                        progress_wrapper = progress_wrapper, 
+                                        revcomp = revcomp)
     (scan_results_df, 
      motif_peak_set_dict) = format_scan_results(scan_results)
     
@@ -100,6 +102,8 @@ def analyze_scored_fasta_data_with_lr(
         frequency_ratio_df = frequency_ratio_df.sort_values(by = 'peak_id')
         # debug
         # frequency_ratio_df.to_csv('frequency_ratio_df.tsv', sep = '\t')
+        print(f'frequency_ratio_df_shape = {frequency_ratio_df.shape}')
+        print(f'frequency_ratio_df_columns = {frequency_ratio_df.columns}')
         covariate_dfs.append(frequency_ratio_df)
 
     if use_length:
@@ -112,6 +116,8 @@ def analyze_scored_fasta_data_with_lr(
         peak_length_df = peak_length_df.sort_values(by = 'peak_id')
         # debug
         # peak_length_df.to_csv('peak_length_df.tsv', sep = '\t')
+        print(f'peak_length_df_shape = {peak_length_df.shape}')
+        print(f'peak_length_df_columns = {peak_length_df.columns}')
         covariate_dfs.append(peak_length_df)
     if use_gc:
         end = timer()
@@ -134,6 +140,8 @@ def analyze_scored_fasta_data_with_lr(
         gc_ratio_df = gc_ratio_df.sort_values(by = 'peak_id')
         gc_ratio_df['ratio_gc'] = gc_ratio_df['kmer_ratio_G'] + gc_ratio_df['kmer_ratio_C']
         gc_ratio_df = gc_ratio_df[['peak_id', 'ratio_gc']].copy()
+        print(f'gc_ratio_df_shape = {gc_ratio_df.shape}')
+        print(f'gc_ratio_df_columns = {gc_ratio_df.columns}')
         covariate_dfs.append(gc_ratio_df)
     if user_covariates_df is not None:
         user_covariates_df_cp = user_covariates_df.copy()
@@ -150,17 +158,20 @@ def analyze_scored_fasta_data_with_lr(
                                  }))
         user_covariates_df_cp = (user_covariates_df_cp
                                  .sort_values(by = 'peak_id'))
+        print(f'user_covariates_df_cp_shape = {user_covariates_df_cp.shape}')
+        print(f'user_covariates_df_cp_columns = {user_covariates_df_cp.columns}')
         covariate_dfs.append(user_covariates_df_cp)
     covariates_df = None
     lr_input_df = peak_score_df
-    # print('number of covariates dfs used:')
-    # print(len(covariate_dfs))
+    print('number of covariates dfs used:')
+    print(len(covariate_dfs))
     if len(covariate_dfs) > 0:
         covariates_df = pd.concat([(df
                                     .set_index('peak_id')) 
                                    for df 
                                    in covariate_dfs], 
-                                  axis = 1).reset_index()
+                                  axis = 1, 
+                                  join = 'inner').reset_index()
         # debug
         # covariates_df.to_csv('covariates_df.tsv', sep = '\t')
         # debug
@@ -249,9 +260,10 @@ def analyze_peaks_with_lr(peak_score_df,
     results_df['padj_sig'] = ((results_df['padj'] < padj_thresh)
                               .astype(int))
     results_df['abs_coef'] = np.abs(results_df['coef'])
-    results_df = results_df.sort_values(by = ['abs_coef', 
-                                              'padj_sig'], 
-                                        ascending = False)
+    results_df = (results_df
+                  .sort_values(by = ['abs_coef', 'padj_sig'], 
+                               ascending = False)
+                  .reset_index(drop = True))
     
     return results_df
 
@@ -289,6 +301,7 @@ def preprocess_lr_df(peak_score_df,
         pca_X = pca.transform(X_df)
         pca_ss = StandardScaler(with_mean = True, with_std = True)
         pca_X_ss = pca_ss.fit_transform(pca_X)
+        # pca_covariates_df = pd.DataFrame(pca_X, index = X_df.index, 
         pca_covariates_df = pd.DataFrame(pca_X_ss, index = X_df.index, 
                                          columns = [f'pc_{i}' 
                                                     for i 
@@ -314,7 +327,8 @@ def compute_logit_regression_for_peak_set(peak_set,
     indep_var_cols = [score_colname] + cov_colnames
     X = lr_df[indep_var_cols]
     # X = smapi.add_constant(lr_df[indep_var_cols])
-    model = sm.Logit(y, X)
+#     model = sm.Logit(y, X)
+    model = smapi.Logit(y, X)
     result = model.fit(disp=0)
     coef = result.params[score_colname]
     std_err = result.bse[score_colname]

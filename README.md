@@ -11,7 +11,7 @@ Assuming bioconda is not in your channels.
 ```
 usage: meirlop [-h] (--fa scored_fasta_file | --bed bed_file)
                [--fi reference_fasta_file] [--jobs jobs] [--scan] [--html]
-               [--kmer max_k] [--length] [--gc]
+               [--norevcomp] [--kmer max_k] [--length] [--gc]
                [--covariates covariates_table_file] [--score score_column]
                [--pval scan_pval_threshold] [--pcount scan_pseudocount]
                [--padj logistic_regression_padj_threshold]
@@ -43,6 +43,8 @@ optional arguments:
                         output directory.
   --html                Set this flag to write motif html results table to
                         output directory. Includes motif weblogos.
+  --norevcomp           Set this flag to disable searching for reverse
+                        complement of motifs
   --kmer max_k          Set length of kmers to consider during regression.
                         Principal components based on frequency of kmers will
                         be used as a covariates in logistic regression. Set to

@@ -79,7 +79,7 @@ def get_frequency_ratio_df(
                                                                     sequence, k, 
                                                                     alphabet = alphabet)))
 
-    frequency_ratio_tups = [Parallel(n_jobs = 20)(delayed(get_frequency_ratio_tup)(sequence_id, 
+    frequency_ratio_tups = [Parallel(n_jobs = n_jobs)(delayed(get_frequency_ratio_tup)(sequence_id, 
                                                                                    sequence, k) 
                                                   for sequence_id, sequence 
                                                   in progress_wrapper(sequence_dict.items())) 
@@ -126,4 +126,4 @@ def get_frequency_ratio_df(
 #                                       in range(len(alphabet)**k)] 
 #                                   if len(set(kmer)) == 1])
         frequency_ratio_df = frequency_ratio_df.drop(columns = columns_to_drop)
-    return frequency_ratio_df
+    return frequency_ratio_df.dropna()

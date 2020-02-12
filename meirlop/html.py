@@ -1,29 +1,41 @@
-import weblogolib
+import weblogo as weblogolib
 import base64
+from html import escape as escape_html
 import pandas as pd
 
 from joblib import Parallel, delayed
 from tqdm import tqdm
 
-def get_html_logo_for_motif_matrix(motif_matrix):
+def get_html_logo_for_motif_matrix(motif_matrix, image_size = 'medium', image_format = 'png'):
     pwm = motif_matrix.T
     data = weblogolib.LogoData.from_counts('ACGT', pwm)
     options = weblogolib.LogoOptions(fineprint=False,
                                      color_scheme=weblogolib.classic, 
-                                     stack_width=weblogolib.std_sizes['medium'],
+                                     stack_width=weblogolib.std_sizes[image_size],
                                      logo_start=1, logo_end=pwm.shape[0])
     logo_format = weblogolib.LogoFormat(data, options)
-    img_data_uri = ('data:image/png;base64,' 
-                    + base64.b64encode(weblogolib
-                                       .png_formatter(data, logo_format))
-                    .decode())
+    # print(image_size, image_format)
+    if image_format is 'svg':
+        # print('making svg logo')
+        img_data_uri = ('data:image/svg+xml;base64,' 
+                        + base64.b64encode(weblogolib
+                                           .svg_formatter(data, logo_format))
+                        .decode())
+    else:
+        # print('making png logo')
+        img_data_uri = ('data:image/png;base64,' 
+                        + base64.b64encode(weblogolib
+                                           .png_formatter(data, logo_format))
+                        .decode())
+    
     return f'<img src="{img_data_uri}">'
 
 def get_html_for_lr_results_df(lr_results_df, 
                                motif_matrix_dict, 
                                name = '', 
                                n_jobs = 1, 
-                               progress_wrapper = tqdm):
+                               progress_wrapper = tqdm, 
+                               cmdline = ''):
     df = (lr_results_df.copy()
           .sort_values(by = ['padj_sig','coef'], ascending = False)
           .reset_index(drop = True))
@@ -45,6 +57,7 @@ def get_html_for_lr_results_df(lr_results_df,
     pd.set_option('display.max_colwidth', -1)
     df_html = df.to_html(escape = False)
     pd.set_option('display.max_colwidth', old_width)
+    cmdline_escaped = escape_html(cmdline)
     html = (f'''<!DOCTYPE html>
     <html>
     <head>
@@ -81,6 +94,11 @@ def get_html_for_lr_results_df(lr_results_df,
     </script>
     </head>
     <body>
+    <div class="alert alert-info" role="alert">
+        This table was generated with the following command line:
+        <br/>
+        <code>{cmdline_escaped}</code>
+    </div>
     <div class="container-fluid">
     {df_html}
     </div>
