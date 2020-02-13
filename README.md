@@ -20,7 +20,9 @@ usage: meirlop [-h] (--fa scored_fasta_file | --bed bed_file)
 Determine enrichment of motifs in a list of scored sequences.
 
 positional arguments:
-  motif_matrix_file     A motif matrices file in JASPAR format.
+  motif_matrix_file     A motif matrices file in JASPAR format. As a start,
+                        one can be obtained through the JASPAR website at:
+                        http://jaspar.genereg.net/downloads/
   output_dir            Create this directory and write output to it.
 
 optional arguments:

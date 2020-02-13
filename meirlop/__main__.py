@@ -8,7 +8,7 @@ import json
 from tqdm import tqdm
 import pandas as pd
 
-from . import analyze_scored_fasta_data_with_lr
+from . import analyze_scored_fasta_data_with_lr, dict_to_df
 from . import read_scored_fasta, read_motif_matrices
 from . import get_scored_sequences
 from . import get_html_for_lr_results_df
@@ -67,7 +67,11 @@ def setup_parser(parser):
                         type = argparse.FileType('r'), 
                         help = (
                             'A motif matrices file '
-                            'in JASPAR format.'
+                            'in JASPAR format. '
+                            'As a start, one can be '
+                            'obtained through the '
+                            'JASPAR website at: '
+                            'http://jaspar.genereg.net/downloads/'
                         ))
     
     parser.add_argument('output_dir', 
@@ -270,8 +274,23 @@ def run_meirlop(args):
     elif (bed_file is not None) and (reference_fasta_file is not None):
         sequence_dict, score_dict = get_scored_sequences(bed_file, 
                                                          reference_fasta_file)
-    motif_matrix_dict = read_motif_matrices(motif_matrix_file)[0]
     
+    peak_length_dict = {k: len(v)
+                            for k,v 
+                            in sequence_dict.items()}
+    peak_length_df = dict_to_df(peak_length_dict, 
+                                'peak_id', 
+                                'peak_length')
+    
+    motif_matrix_dict = read_motif_matrices(motif_matrix_file)[0]
+    motif_length_dict = {
+        motif_id: motif_matrix.shape[1] 
+        for motif_id, motif_matrix 
+        in motif_matrix_dict.items()
+    }
+    motif_length_df = dict_to_df(motif_length_dict, 
+                                 'motif_id', 
+                                 'motif_length')
     if score_column is not None:
         peak_id_column = user_covariates_df.columns[0]
         score_dict = (user_covariates_df
@@ -304,6 +323,8 @@ def run_meirlop(args):
     
     outpath_lr_results = os.path.normpath(output_dir + '/lr_results.tsv')
     outpath_lr_input = os.path.normpath(output_dir + '/lr_input.tsv')
+    outpath_peak_length = os.path.normpath(output_dir + '/peak_lengths.tsv')
+    outpath_motif_length = os.path.normpath(output_dir + '/motif_lengths.tsv')
     outpath_motif_peak_set_dict = os.path.normpath(output_dir + '/motif_peak_set_dict.p')
     outpath_motif_peak_set_json = os.path.normpath(output_dir + '/motif_peak_set_dict.json')
     outpath_scan_results = os.path.normpath(output_dir + '/scan_results.tsv')
@@ -325,6 +346,8 @@ def run_meirlop(args):
     
     lr_results_df.to_csv(outpath_lr_results, sep = '\t', index = False)
     lr_input_df.to_csv(outpath_lr_input, sep = '\t', index = False)
+    peak_length_df.to_csv(outpath_peak_length, sep = '\t', index = False)
+    motif_length_df.to_csv(outpath_motif_length, sep = '\t', index = False)
     if save_scan:
         scan_results_df.to_csv(outpath_scan_results, sep = '\t', index = False)
     with open(outpath_motif_peak_set_dict, 'wb') as outpath_motif_peak_set_dict_file:
