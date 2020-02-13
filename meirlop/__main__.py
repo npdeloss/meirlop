@@ -107,13 +107,23 @@ def setup_parser(parser):
                             'Includes motif weblogos.'
                         ))
     
+    parser.add_argument('--sortabs', 
+                        dest = 'sortabs', 
+                        action='store_true', 
+                        help = (
+                            'Set this flag to sort ' 
+                            'enrichment results by ' 
+                            'the absolute value of '
+                            'the enrichment coefficient.'
+                        ))
+    
     parser.add_argument('--norevcomp', 
                         dest = 'norevcomp', 
                         action='store_true', 
                         help = (
                             'Set this flag to disable ' 
                             'searching for ' 
-                            'reverse complement of motifs'
+                            'reverse complement of motifs.'
                         ))
     
     parser.add_argument('--kmer', 
@@ -231,6 +241,7 @@ def run_meirlop(args):
     motif_matrix_file = args.motif_matrix_file
     save_scan = args.save_scan
     save_html = args.save_html
+    sortabs = args.sortabs
     norevcomp = args.norevcomp
     max_k = args.max_k
     use_length = args.use_length
@@ -305,8 +316,11 @@ def run_meirlop(args):
                                    'ci_95_pct_lower','ci_95_pct_upper',
                                    'auc',
                                    'pval','padj','padj_sig', 'num_peaks']]
-    
-    lr_results_df = lr_results_df.sort_values(by = ['padj_sig','coef'], 
+    sortcol = 'coef'
+    if sortabs == True:
+        sortcol = 'abs_coef'
+    print(f'Sorting by padj_sig and {sortcol}')
+    lr_results_df = lr_results_df.sort_values(by = ['padj_sig', sortcol], 
                                               ascending = False)
     
     lr_results_df.to_csv(outpath_lr_results, sep = '\t', index = False)
@@ -322,7 +336,7 @@ def run_meirlop(args):
     
     if save_html:
         print('exporting html report with sequence logos')
-        html = get_html_for_lr_results_df(lr_results_df, motif_matrix_dict, output_dir, n_jobs = n_jobs, cmdline = cmdline)
+        html = get_html_for_lr_results_df(lr_results_df, motif_matrix_dict, output_dir, n_jobs = n_jobs, cmdline = cmdline, sortcol = sortcol)
         with open(outpath_html_results, 'w') as html_file:
             html_file.write(html)
 

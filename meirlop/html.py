@@ -35,9 +35,10 @@ def get_html_for_lr_results_df(lr_results_df,
                                name = '', 
                                n_jobs = 1, 
                                progress_wrapper = tqdm, 
-                               cmdline = ''):
+                               cmdline = '', 
+                               sortcol = 'coef'):
     df = (lr_results_df.copy()
-          .sort_values(by = ['padj_sig','coef'], ascending = False)
+          .sort_values(by = ['padj_sig', sortcol], ascending = False)
           .reset_index(drop = True))
     get_motif_id_logo_tup = lambda motif_id: (motif_id, get_html_logo_for_motif_matrix(motif_matrix_dict[motif_id]))
     html_logo_by_motif_id_tups = Parallel(n_jobs = n_jobs)(delayed(get_motif_id_logo_tup)(motif_id) 
@@ -88,7 +89,8 @@ def get_html_for_lr_results_df(lr_results_df,
         'dom': ("<'row'<'col-sm-12 col-md-5'B><'col-sm-12 col-md-3'l><'col-sm-12 col-md-4'f>>" +
                 "<'row'<'col-sm-12'tr>>" +
                 "<'row'<'col-sm-12 col-md-5'i><'col-sm-12 col-md-7'p>>"), 
-        'buttons': [ 'copy', 'excel', 'csv', 'colvis']
+        'buttons': [ 'copy', 'excel', 'csv', 'colvis'], 
+        'columnDefs': [{{'targets': [5, 6, 7, 8], 'visible': false}}]
         }});
     }} );
     </script>
