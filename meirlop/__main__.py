@@ -336,7 +336,7 @@ def run_meirlop(args):
                                    'std_err',
                                    'ci_95_pct_lower','ci_95_pct_upper',
                                    'auc',
-                                   'pval','padj','padj_sig', 'num_peaks']]
+                                   'pval','padj','padj_sig', 'num_peaks', 'percent_peaks']]
     sortcol = 'coef'
     if sortabs == True:
         sortcol = 'abs_coef'

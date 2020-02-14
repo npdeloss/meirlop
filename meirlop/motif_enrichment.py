@@ -200,6 +200,7 @@ def analyze_scored_fasta_data_with_lr(
         progress_wrapper = tqdm)
     motif_num_peaks_dict = {k: len(set(v)) for k, v in motif_peak_set_dict.items()}
     lr_results_df['num_peaks'] = lr_results_df['motif_id'].map(motif_num_peaks_dict)
+    lr_results_df['percent_peaks'] = 100.0 * lr_results_df['num_peaks'] / len(list(sequence_dict.keys()))
     end = timer()
     runtime = end - start
     print(f'{runtime} seconds')

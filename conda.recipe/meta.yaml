@@ -26,6 +26,7 @@ requirements:
     - scikit-learn
     - statsmodels
     - tqdm
+    - python-slugify
 
 test:
   imports:

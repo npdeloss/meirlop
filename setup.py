@@ -54,7 +54,8 @@ setup(name='meirlop',
                         'pandas',
                         'scikit-learn',
                         'statsmodels',
-                        'tqdm'
+                        'tqdm',
+                        'python-slugify'
                         ],
       zip_safe=False,
       download_url='https://github.com/npdeloss/meirlop')

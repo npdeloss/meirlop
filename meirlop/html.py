@@ -53,10 +53,23 @@ def get_html_for_lr_results_df(lr_results_df,
              'std_err',
              'ci_95_pct_lower','ci_95_pct_upper',
              'auc',
-             'pval','padj','padj_sig', 'num_peaks']]
+             'pval','padj','padj_sig', 'num_peaks', 'percent_peaks']]
+    df_style = (df.style
+                .bar(subset=['coef'], 
+                     align='mid', 
+                     color=['#e6bbad', '#add8e6'])
+                .bar(subset=['padj_sig'], 
+                     color = ['#ade6bb'], 
+                     vmin = 0, 
+                     vmax = 1)
+                .bar(subset=['percent_peaks'], 
+                     color = ['#e6d8ad'], 
+                     vmin = 0.0, 
+                     vmax = 100.0))
     old_width = pd.get_option('display.max_colwidth')
     pd.set_option('display.max_colwidth', -1)
-    df_html = df.to_html(escape = False)
+    # df_html = df.to_html(escape = False)
+    df_html = df_style.render(escape = False)
     pd.set_option('display.max_colwidth', old_width)
     cmdline_escaped = escape_html(cmdline)
     html = (f'''<!DOCTYPE html>
