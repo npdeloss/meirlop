@@ -65,7 +65,16 @@ def get_html_for_lr_results_df(lr_results_df,
                 .bar(subset=['percent_peaks'], 
                      color = ['#e6d8ad'], 
                      vmin = 0.0, 
-                     vmax = 100.0))
+                     vmax = 100.0)
+                .applymap(lambda x: (
+                    'background-repeat: repeat-x; '
+                    'background-size: 100% 50%; '
+                    'background-position-y: 100%;'
+                ), subset = [
+                    'coef', 
+                    'padj_sig', 
+                    'percent_peaks'
+                ]))
     old_width = pd.get_option('display.max_colwidth')
     pd.set_option('display.max_colwidth', -1)
     # df_html = df.to_html(escape = False)
