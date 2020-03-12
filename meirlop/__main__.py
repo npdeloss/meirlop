@@ -329,6 +329,8 @@ def run_meirlop(args):
     outpath_motif_peak_set_json = os.path.normpath(output_dir + '/motif_peak_set_dict.json')
     outpath_scan_results = os.path.normpath(output_dir + '/scan_results.tsv')
     outpath_html_results = os.path.normpath(output_dir + '/lr_results.html')
+    outpath_html_logos_dict = os.path.normpath(output_dir + '/html_logos.p')
+    outpath_html_logos_json = os.path.normpath(output_dir + '/html_logos.json')
     outpath_cmdline_txt = os.path.normpath(output_dir + '/cmdline.txt')
     
     lr_results_df = lr_results_df[['motif_id',
@@ -359,9 +361,13 @@ def run_meirlop(args):
     
     if save_html:
         print('exporting html report with sequence logos')
-        html = get_html_for_lr_results_df(lr_results_df, motif_matrix_dict, output_dir, n_jobs = n_jobs, cmdline = cmdline, sortcol = sortcol)
+        html, html_logos = get_html_for_lr_results_df(lr_results_df, motif_matrix_dict, output_dir, n_jobs = n_jobs, cmdline = cmdline, sortcol = sortcol)
         with open(outpath_html_results, 'w') as html_file:
             html_file.write(html)
+        with open(outpath_html_logos_dict, 'wb') as outpath_html_logos_dict_file:
+            pickle.dump(html_logos, outpath_html_logos_dict_file)
+        with open(outpath_html_logos_json, 'w') as outpath_html_logos_json_file:
+            json.dump(html_logos, outpath_html_logos_json_file)
 
 if __name__ == '__main__':
     main()

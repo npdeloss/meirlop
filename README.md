@@ -8,6 +8,7 @@ To install this package with conda run:
 Assuming bioconda is not in your channels.
 
 # Usage
+## MEIRLOP
 ```
 usage: meirlop [-h] (--fa scored_fasta_file | --bed bed_file)
                [--fi reference_fasta_file] [--jobs jobs] [--scan] [--html]
@@ -80,4 +81,63 @@ optional arguments:
   --padj logistic_regression_padj_threshold
                         Set adjusted p-value threshold for logistic regression
                         results. Defaults to 0.05.
+usage: modiplot [-h] [--jobs jobs]
+                [--motifslugs motif_slugs_file | --top [n_top_motifs]]
+                [--alphafactor [alpha_factor] | --alphaoverride
+                alpha_override] [--pointsize pointsize] [--separate]
+                [--formats formats [formats ...]] [--fwdcolor fwd_color]
+                [--revcolor rev_color] [--width width] [--height height]
+                [--dpi dpi] [--nopickle]
+                output_dir
+
+```
+
+## MoDiPlot
+```
+Make a plot of the distribution of a motif within a set of scored sequences (a
+motif distribution plot, AKA "MoDiPlot") after analysis with meirlop (--scan
+is required to generate the necessary scan_results.tsv).
+
+positional arguments:
+  output_dir            Read the contents of this meirlop output dir and place
+                        plots here.
+
+optional arguments:
+  -h, --help            show this help message and exit
+  --jobs jobs           The number of jobs for multithreading.
+  --motifslugs motif_slugs_file
+                        A 2-column tab-separated file with two columns,
+                        "motif_id" and "slugname". These column names must be
+                        in the header. This table translates motif IDs
+                        submitted to meirlop into filename-compatible "slugs"
+                        to assign useful filenames to motif plots, and
+                        determines which motifs to plot. Mutually exclusive
+                        with --top.
+  --top [n_top_motifs]  The number of top motif enrichment results from
+                        meirlop lr_results to plot. Mutually exclusive with
+                        --motifslugs. Default = 10
+  --alphafactor [alpha_factor]
+                        Factor multiplied against max motif count over
+                        position to determine automatically assigned point
+                        alpha (transparency) for plotting many motif
+                        instances. Mutually exclusive with --alphaoverride.
+                        Default = 4.0
+  --alphaoverride alpha_override
+                        Override automatic alpha calculation with this
+                        constant. (See --alphafactor) Mutually exclusive with
+                        --alphafactor.
+  --pointsize pointsize
+                        Size of points to plot.
+  --separate            Plot +/- motif orientations separately.
+  --formats formats [formats ...]
+                        List of output formats for plots. Default: Output
+                        plots in SVG and PNG formats.
+  --fwdcolor fwd_color  Color of points for motifs in + orientation.
+  --revcolor rev_color  Color of points for motifs in - orientation.
+  --width width         Width of figures to output, in inches.
+  --height height       Height of figures to output, in inches.
+  --dpi dpi             DPI of figures to output.
+  --nopickle            Do not store motif distributions in a pickle file.
+                        They can take a while to write, but might come in
+                        handy in the future.
 ```

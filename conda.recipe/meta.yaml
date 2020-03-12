@@ -1,6 +1,6 @@
 package:
   name: meirlop
-  version: "0.0.10"
+  version: "0.0.12"
 
 source:
   path: ..
@@ -8,6 +8,7 @@ source:
 build:
   entry_points:
     - meirlop = meirlop.__main__:main
+    - modiplot = meirlop.motif_distribution_plotting:main
 
 requirements:
   build:

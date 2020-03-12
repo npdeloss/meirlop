@@ -5,7 +5,7 @@ from setuptools.command.test import test as TestCommand
 
 
 
-__version__='0.0.10'
+__version__='0.0.12'
 
 # if sys.argv[-1] == 'publish':
 #     os.system("python setup.py sdist bdist_wheel register upload")
@@ -32,8 +32,11 @@ setup(name='meirlop',
           'Operating System :: POSIX',
           'Topic :: Software Development :: Libraries'
           'Topic :: Scientific/Engineering :: Bio-Informatics'],
-      keywords= ['Motif', 'Enrichment',
-          'Bioinformatics'],
+      keywords= [
+          'Motif', 
+          'Enrichment',
+          'Bioinformatics'
+      ],
       url='https://github.com/npdeloss/meirlop',
       author='Nathaniel Delos Santos',
       author_email='npdeloss@ucsd.edu',
@@ -41,7 +44,8 @@ setup(name='meirlop',
       packages=['meirlop'],
       entry_points={
           'console_scripts':[
-              'meirlop=meirlop.__main__:main'
+              'meirlop=meirlop.__main__:main',
+              'modiplot=meirlop.motif_distribution_plotting:main'
           ]
       },
       install_requires=[

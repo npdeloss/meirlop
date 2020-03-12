@@ -129,4 +129,4 @@ def get_html_for_lr_results_df(lr_results_df,
     </body>
     </html> 
     ''')
-    return html
+    return html, html_logo_by_motif_id
