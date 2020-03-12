@@ -6,7 +6,6 @@ import pickle
 import numpy as np
 import matplotlib as mpl
 import matplotlib.pyplot as plt
-import seaborn as sns
 from joblib import Parallel, delayed
 from warnings import warn
 import datetime

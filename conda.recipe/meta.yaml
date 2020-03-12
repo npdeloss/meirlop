@@ -12,17 +12,18 @@ build:
 
 requirements:
   build:
-    - python>=3.6
+    - python
     - setuptools
-    - numpy>=1.13
+    - numpy>=1.18
   run:
     - python>=3.6
     - biopython
     - pybedtools
-    - weblogo=3.6
+    - weblogo>=3.7y
+    - matplotlib>=3.2
     - joblib
     - moods
-    - numpy>=1.13
+    - numpy>=1.18
     - pandas
     - scikit-learn
     - statsmodels
