@@ -12,7 +12,6 @@ from warnings import warn
 import datetime
 import time
 import json
-from timeit import default_timer as timer
 
 from tqdm import tqdm
 
@@ -226,7 +225,7 @@ def run_modiplot(args):
     
     if args.motif_slugs_file is not None:
         motif_id_slugname_df = pd.read_csv(
-            motif_id_slugname_df, 
+            args.motif_slugs_file, 
             sep = '\t'
         )
     else:
