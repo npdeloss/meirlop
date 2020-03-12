@@ -15,7 +15,7 @@ def get_html_logo_for_motif_matrix(motif_matrix, image_size = 'medium', image_fo
                                      logo_start=1, logo_end=pwm.shape[0])
     logo_format = weblogolib.LogoFormat(data, options)
     # print(image_size, image_format)
-    if image_format is 'svg':
+    if image_format == 'svg':
         # print('making svg logo')
         img_data_uri = ('data:image/svg+xml;base64,' 
                         + base64.b64encode(weblogolib
