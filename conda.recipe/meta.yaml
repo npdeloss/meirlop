@@ -1,6 +1,6 @@
 package:
   name: meirlop
-  version: "0.0.12"
+  version: "0.0.13"
 
 source:
   path: ..
@@ -19,7 +19,7 @@ requirements:
     - python>=3.6
     - biopython
     - pybedtools
-    - weblogo>=3.7y
+    - logomaker>=0.8
     - matplotlib>=3.2
     - joblib
     - moods

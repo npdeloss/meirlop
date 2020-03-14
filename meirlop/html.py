@@ -1,34 +1,101 @@
-import weblogo as weblogolib
-import base64
+# import weblogo as weblogolib
+# import base64
 from html import escape as escape_html
 import pandas as pd
 
 from joblib import Parallel, delayed
 from tqdm import tqdm
 
-def get_html_logo_for_motif_matrix(motif_matrix, image_size = 'medium', image_format = 'png'):
-    pwm = motif_matrix.T
-    data = weblogolib.LogoData.from_counts('ACGT', pwm)
-    options = weblogolib.LogoOptions(fineprint=False,
-                                     color_scheme=weblogolib.classic, 
-                                     stack_width=weblogolib.std_sizes[image_size],
-                                     logo_start=1, logo_end=pwm.shape[0])
-    logo_format = weblogolib.LogoFormat(data, options)
-    # print(image_size, image_format)
-    if image_format == 'svg':
-        # print('making svg logo')
-        img_data_uri = ('data:image/svg+xml;base64,' 
-                        + base64.b64encode(weblogolib
-                                           .svg_formatter(data, logo_format))
-                        .decode())
-    else:
-        # print('making png logo')
-        img_data_uri = ('data:image/png;base64,' 
-                        + base64.b64encode(weblogolib
-                                           .png_formatter(data, logo_format))
-                        .decode())
+import io
+import logomaker
+
+def motif_matrix_to_df(motif_matrix, alphabet = 'ACGT'):
+    return (
+        pd.DataFrame(
+            motif_matrix
+        )
+        .T
+        .rename(
+            columns = {
+                k:v 
+                for k,v 
+                in enumerate(
+                    list(
+                        alphabet
+                    )
+                )
+            }, 
+            index = {
+                i: 
+                i+1 
+                for i 
+                in range(
+                    motif_matrix.shape[1]
+                )
+            }
+        )
+    )
+
+def plot_motif_matrix(motif_matrix, alphabet = 'ACGT', **kwargs):
+    motif_logo = logomaker.Logo(
+        logomaker.transform_matrix(
+            motif_matrix_to_df(
+                motif_matrix, 
+                alphabet = alphabet
+            ), 
+            from_type = 'probability', 
+            to_type = 'information'
+        ), 
+        **kwargs
+    )
+
+    # style using Logo methods
+    motif_logo.style_spines(visible=False)
+    motif_logo.style_spines(spines=['left', 'bottom'], visible=True)
+    motif_logo.style_xticks(fmt='%d', anchor=0)
+
+    # style using Axes methods
+    motif_logo.ax.set_ylabel('bits', labelpad=-1)
+    motif_logo.ax.xaxis.set_ticks_position('none')
+    motif_logo.ax.xaxis.set_tick_params(pad=-1)
+    motif_logo.ax.set_ylim(0.0, 2.0)
     
-    return f'<img src="{img_data_uri}">'
+    return motif_logo
+
+def get_motif_logo_svg(motif_logo, **kwargs):
+    svg_data = io.StringIO()
+    motif_logo.fig.savefig(svg_data, format = 'svg', **kwargs)
+    
+    return svg_data.getvalue()
+
+def get_svg_logo_for_motif_matrix(motif_logo, savefig_kwargs = {}, **kwargs):
+    return get_motif_logo_svg(plot_motif_matrix(motif_matrix, **kwargs), **savefig_kwargs)
+
+get_html_logo_for_motif_matrix = get_svg_logo_for_motif_matrix
+
+# def get_html_logo_for_motif_matrix(motif_matrix, image_size = 'medium', image_format = 'png'):
+#     pwm = motif_matrix.T
+#     data = weblogolib.LogoData.from_counts('ACGT', pwm)
+#     options = weblogolib.LogoOptions(fineprint=False,
+#                                      color_scheme=weblogolib.classic, 
+#                                      stack_width=weblogolib.std_sizes[image_size],
+#                                      logo_start=1, logo_end=pwm.shape[0])
+#     logo_format = weblogolib.LogoFormat(data, options)
+#     # print(image_size, image_format)
+#     if image_format == 'svg':
+#         # print('making svg logo')
+#         img_data_uri = ('data:image/svg+xml;base64,' 
+#                         + base64.b64encode(weblogolib
+#                                            .svg_formatter(data, logo_format))
+#                         .decode())
+#     else:
+#         # print('making png logo')
+#         img_data_uri = ('data:image/png;base64,' 
+#                         + base64.b64encode(weblogolib
+#                                            .png_formatter(data, logo_format))
+#                         .decode())
+    
+#     return f'<img src="{img_data_uri}">'
 
 def get_html_for_lr_results_df(lr_results_df, 
                                motif_matrix_dict, 
