@@ -12,9 +12,10 @@ Assuming bioconda and conda-forge are not in your channels.
 ```
 usage: meirlop [-h] (--fa scored_fasta_file | --bed bed_file)
                [--fi reference_fasta_file] [--jobs jobs] [--scan] [--html]
-               [--sortabs] [--norevcomp] [--kmer max_k] [--length] [--gc]
-               [--covariates covariates_table_file] [--score score_column]
-               [--pval scan_pval_threshold] [--pcount scan_pseudocount]
+               [--svg] [--sortabs] [--norevcomp] [--kmer max_k] [--length]
+               [--gc] [--covariates covariates_table_file]
+               [--score score_column] [--pval scan_pval_threshold]
+               [--pcount scan_pseudocount]
                [--padj logistic_regression_padj_threshold]
                motif_matrix_file output_dir
 
@@ -46,6 +47,8 @@ optional arguments:
                         output directory.
   --html                Set this flag to write motif html results table to
                         output directory. Includes motif weblogos.
+  --svg                 Set this flag to draw motif logos in html output as
+                        svg. Useful for figures, but slower for browsers.
   --sortabs             Set this flag to sort enrichment results by the
                         absolute value of the enrichment coefficient.
   --norevcomp           Set this flag to disable searching for reverse
@@ -81,15 +84,6 @@ optional arguments:
   --padj logistic_regression_padj_threshold
                         Set adjusted p-value threshold for logistic regression
                         results. Defaults to 0.05.
-usage: modiplot [-h] [--jobs jobs]
-                [--motifslugs motif_slugs_file | --top [n_top_motifs]]
-                [--alphafactor [alpha_factor] | --alphaoverride
-                alpha_override] [--pointsize pointsize] [--separate]
-                [--formats formats [formats ...]] [--fwdcolor fwd_color]
-                [--revcolor rev_color] [--width width] [--height height]
-                [--dpi dpi] [--nopickle]
-                output_dir
-
 ```
 
 ## MoDiPlot
