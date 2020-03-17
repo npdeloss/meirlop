@@ -1,6 +1,5 @@
-# import weblogo as weblogolib
-# import base64
 from html import escape as escape_html
+import base64
 import pandas as pd
 
 from joblib import Parallel, delayed
@@ -8,6 +7,10 @@ from tqdm import tqdm
 
 import io
 import logomaker
+
+import matplotlib.pyplot as plt
+
+import matplotlib
 
 def motif_matrix_to_df(motif_matrix, alphabet = 'ACGT'):
     return (
@@ -37,6 +40,7 @@ def motif_matrix_to_df(motif_matrix, alphabet = 'ACGT'):
     )
 
 def plot_motif_matrix(motif_matrix, alphabet = 'ACGT', **kwargs):
+    
     motif_logo = logomaker.Logo(
         logomaker.transform_matrix(
             motif_matrix_to_df(
@@ -62,40 +66,42 @@ def plot_motif_matrix(motif_matrix, alphabet = 'ACGT', **kwargs):
     
     return motif_logo
 
-def get_motif_logo_svg(motif_logo, **kwargs):
+def get_motif_logo_svg(motif_logo, close_fig = True, **kwargs):
+    matplotlib.use('svg')
+    matplotlib.rcParams['svg.fonttype'] = 'none'
+    plt.rcParams['svg.fonttype'] = 'none'
     svg_data = io.StringIO()
     motif_logo.fig.savefig(svg_data, format = 'svg', **kwargs)
-    
-    return svg_data.getvalue()
+    if close_fig:
+        plt.close(motif_logo.fig)
+    return '\n'.join(svg_data.getvalue().split('\n')[3:])
 
-def get_svg_logo_for_motif_matrix(motif_logo, savefig_kwargs = {}, **kwargs):
+def get_motif_logo_png(motif_logo, close_fig = True, **kwargs):
+    matplotlib.use('agg')
+    png_data = io.BytesIO()
+    motif_logo.fig.savefig(png_data, format = 'png', **kwargs)
+    if close_fig:
+        plt.close(motif_logo.fig)
+    png_data.seek(0)
+    png_data_uri = (
+        'data:image/png;base64,' + 
+        (
+            base64.b64encode(png_data.getvalue()).
+            decode()
+        )
+    )
+    png_img_str = f'<img src="{png_data_uri}">'
+    return png_img_str
+
+def get_svg_logo_for_motif_matrix(motif_matrix, savefig_kwargs = {'bbox_inches':'tight', 'transparent': True}, **kwargs):
+    matplotlib.use('svg')
+    matplotlib.rcParams['svg.fonttype'] = 'none'
+    plt.rcParams['svg.fonttype'] = 'none'
     return get_motif_logo_svg(plot_motif_matrix(motif_matrix, **kwargs), **savefig_kwargs)
 
-get_html_logo_for_motif_matrix = get_svg_logo_for_motif_matrix
-
-# def get_html_logo_for_motif_matrix(motif_matrix, image_size = 'medium', image_format = 'png'):
-#     pwm = motif_matrix.T
-#     data = weblogolib.LogoData.from_counts('ACGT', pwm)
-#     options = weblogolib.LogoOptions(fineprint=False,
-#                                      color_scheme=weblogolib.classic, 
-#                                      stack_width=weblogolib.std_sizes[image_size],
-#                                      logo_start=1, logo_end=pwm.shape[0])
-#     logo_format = weblogolib.LogoFormat(data, options)
-#     # print(image_size, image_format)
-#     if image_format == 'svg':
-#         # print('making svg logo')
-#         img_data_uri = ('data:image/svg+xml;base64,' 
-#                         + base64.b64encode(weblogolib
-#                                            .svg_formatter(data, logo_format))
-#                         .decode())
-#     else:
-#         # print('making png logo')
-#         img_data_uri = ('data:image/png;base64,' 
-#                         + base64.b64encode(weblogolib
-#                                            .png_formatter(data, logo_format))
-#                         .decode())
-    
-#     return f'<img src="{img_data_uri}">'
+def get_png_logo_for_motif_matrix(motif_matrix, savefig_kwargs = {'bbox_inches':'tight', 'transparent': True}, **kwargs):
+    matplotlib.use('agg')
+    return get_motif_logo_png(plot_motif_matrix(motif_matrix, **kwargs), **savefig_kwargs)
 
 def get_html_for_lr_results_df(lr_results_df, 
                                motif_matrix_dict, 
@@ -103,14 +109,31 @@ def get_html_for_lr_results_df(lr_results_df,
                                n_jobs = 1, 
                                progress_wrapper = tqdm, 
                                cmdline = '', 
-                               sortcol = 'coef'):
+                               sortcol = 'coef', 
+                               logo_format = 'svg'):
     df = (lr_results_df.copy()
           .sort_values(by = ['padj_sig', sortcol], ascending = False)
           .reset_index(drop = True))
-    get_motif_id_logo_tup = lambda motif_id: (motif_id, get_html_logo_for_motif_matrix(motif_matrix_dict[motif_id]))
+    get_logo_for_motif_matrix = get_svg_logo_for_motif_matrix
+    if logo_format is 'png':
+        get_logo_for_motif_matrix = get_png_logo_for_motif_matrix
+    get_motif_id_logo_tup = lambda motif_id: (
+        motif_id, get_logo_for_motif_matrix(
+            motif_matrix_dict[motif_id], 
+            figsize = (
+                0.3 * motif_matrix_dict[motif_id].shape[1], 
+                1.5
+            )
+        )
+    )
+#     get_motif_id_logo_tup = lambda motif_id: (motif_id, get_html_logo_for_motif_matrix(motif_matrix_dict[motif_id]))
     html_logo_by_motif_id_tups = Parallel(n_jobs = n_jobs)(delayed(get_motif_id_logo_tup)(motif_id) 
                                                            for motif_id 
                                                            in progress_wrapper(list(motif_matrix_dict.keys())))
+#     html_logo_by_motif_id_tups = [
+#         get_motif_id_logo_tup(motif_id) 
+#         for motif_id 
+#         in progress_wrapper(list(motif_matrix_dict.keys()))]
     html_logo_by_motif_id = {motif_id: logo 
                              for motif_id, logo in html_logo_by_motif_id_tups}
     df['motif_logo'] = df['motif_id'].map(html_logo_by_motif_id)
@@ -158,8 +181,7 @@ def get_html_for_lr_results_df(lr_results_df,
     <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.1.1/css/bootstrap.min.css"/>
     <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.18/css/dataTables.bootstrap4.min.css"/>
     <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/buttons/1.5.4/css/buttons.bootstrap4.min.css"/>
-    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/responsive/2.2.2/css/responsive.bootstrap4.min.css"/>
-
+    
     <script type="text/javascript" src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
     <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.1.1/js/bootstrap.min.js"></script>
     <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jszip/2.5.0/jszip.min.js"></script>
@@ -169,7 +191,6 @@ def get_html_for_lr_results_df(lr_results_df,
     <script type="text/javascript" src="https://cdn.datatables.net/buttons/1.5.4/js/buttons.bootstrap4.min.js"></script>
     <script type="text/javascript" src="https://cdn.datatables.net/buttons/1.5.4/js/buttons.colVis.min.js"></script>
     <script type="text/javascript" src="https://cdn.datatables.net/buttons/1.5.4/js/buttons.html5.min.js"></script>
-    <script type="text/javascript" src="https://cdn.datatables.net/responsive/2.2.2/js/responsive.bootstrap4.min.js"></script>
     <script type="text/javascript">
     $(document).ready(function() {{
         $("table").addClass("table table-striped table-hover table-bordered table-sm table-responsive w-100 mw-100");

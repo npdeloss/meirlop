@@ -111,6 +111,16 @@ def setup_parser(parser):
                             'Includes motif weblogos.'
                         ))
     
+    parser.add_argument('--svg', 
+                        dest = 'svg', 
+                        action='store_true', 
+                        help = (
+                            'Set this flag to draw motif ' 
+                            'logos in html output ' 
+                            'as svg. Useful for figures, '
+                            'but slower for browsers.'
+                        ))
+    
     parser.add_argument('--sortabs', 
                         dest = 'sortabs', 
                         action='store_true', 
@@ -361,7 +371,18 @@ def run_meirlop(args):
     
     if save_html:
         print('exporting html report with sequence logos')
-        html, html_logos = get_html_for_lr_results_df(lr_results_df, motif_matrix_dict, output_dir, n_jobs = n_jobs, cmdline = cmdline, sortcol = sortcol)
+        logo_format = 'png'
+        if args.svg:
+            logo_format = 'svg'
+        html, html_logos = get_html_for_lr_results_df(
+            lr_results_df, 
+            motif_matrix_dict, 
+            output_dir, 
+            n_jobs = n_jobs, 
+            cmdline = cmdline, 
+            sortcol = sortcol, 
+            logo_format = logo_format
+        )
         with open(outpath_html_results, 'w') as html_file:
             html_file.write(html)
         with open(outpath_html_logos_dict, 'wb') as outpath_html_logos_dict_file:
