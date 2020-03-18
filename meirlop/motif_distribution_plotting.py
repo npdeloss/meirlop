@@ -192,7 +192,8 @@ def setup_parser(parser):
     parser.add_argument('--dpi', 
                         metavar = 'dpi', 
                         dest = 'dpi', 
-                        default = 300, 
+                        default = 300,
+                        type = int, 
                         help = (
                             'DPI of figures to output.'
                         ))

@@ -103,6 +103,15 @@ def get_png_logo_for_motif_matrix(motif_matrix, savefig_kwargs = {'bbox_inches':
     matplotlib.use('agg')
     return get_motif_logo_png(plot_motif_matrix(motif_matrix, **kwargs), **savefig_kwargs)
 
+def get_html_logo_for_motif_matrix(motif_matrix, **kwargs):
+    return get_png_logo_for_motif_matrix(
+        motif_matrix, 
+        figsize = (
+            0.3 * motif_matrix.shape[1], 
+            1.5
+        )
+    )
+
 def get_html_for_lr_results_df(lr_results_df, 
                                motif_matrix_dict, 
                                name = '', 
