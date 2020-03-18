@@ -253,11 +253,11 @@ def run_modiplot(args):
         }
     )
     
-    outpath_figs_dict = os.path.normpath(args.output_dir + 'figs_by_motif_id_and_orientations.p')
-#     outpath_figs_json = os.path.normpath(args.output_dir + 'figs_by_motif_id_and_orientations.json')
+    outpath_figs_dict = os.path.normpath(args.output_dir + '/figs_by_motif_id_and_orientations.p')
+#     outpath_figs_json = os.path.normpath(args.output_dir + '/figs_by_motif_id_and_orientations.json')
     
-    outpath_dists_dict = os.path.normpath(args.output_dir + 'motif_distributions_by_motif.p')
-#     outpath_dists_json = os.path.normpath(args.output_dir + 'motif_distributions_by_motif.json')
+    outpath_dists_dict = os.path.normpath(args.output_dir + '/motif_distributions_by_motif.p')
+#     outpath_dists_json = os.path.normpath(args.output_dir + '/motif_distributions_by_motif.json')
     
     
     with open(outpath_figs_dict, 'wb') as outpath_figs_dict_file:
