@@ -107,8 +107,8 @@ def get_html_logo_for_motif_matrix(motif_matrix, **kwargs):
     return get_png_logo_for_motif_matrix(
         motif_matrix, 
         figsize = (
-            0.3 * motif_matrix.shape[1], 
-            1.5
+            0.25 * motif_matrix.shape[1], 
+            1.0
         )
     )
 
@@ -130,8 +130,8 @@ def get_html_for_lr_results_df(lr_results_df,
         motif_id, get_logo_for_motif_matrix(
             motif_matrix_dict[motif_id], 
             figsize = (
-                0.3 * motif_matrix_dict[motif_id].shape[1], 
-                1.5
+                0.25 * motif_matrix_dict[motif_id].shape[1], 
+                1.0
             )
         )
     )
