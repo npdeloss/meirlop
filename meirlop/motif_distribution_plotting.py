@@ -460,6 +460,7 @@ def plot_motif_instances_single(
 ):
     if alpha_override == None:
         alpha = np.min([np.max([alpha_factor/df['motif_count'].max() for df in rolling_mean_on_motif_position_by_orientation.values()]), 1.0])
+        alpha = np.max([alpha, 1.0/256.0])
     else:
         alpha = alpha_override
     
@@ -539,7 +540,7 @@ orientations_to_filename_substr = lambda orientations: {
     ('-',): 'rev'
 }[tuple(sorted(orientations))]
 
-default_filename_func = lambda motif_id_slugname, orientations: f'{motif_id_slugname}_orientation_{orientations_to_filename_substr(orientations)}'
+default_filename_func = lambda motif_id_slugname, orientations: f'{motif_id_slugname}_orientation_{orientations_to_filename_substr(orientations)}.modiplot'
 
 default_title_func = lambda motif_id, orientations: f'Plot of motif {motif_id} locations in ranked peaks, \n Orientation: '+'/'.join(orientations)
 
