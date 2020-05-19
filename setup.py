@@ -5,7 +5,7 @@ from setuptools.command.test import test as TestCommand
 
 
 
-__version__='0.0.13a'
+__version__='0.0.14'
 
 # if sys.argv[-1] == 'publish':
 #     os.system("python setup.py sdist bdist_wheel register upload")
@@ -45,7 +45,8 @@ setup(name='meirlop',
       entry_points={
           'console_scripts':[
               'meirlop=meirlop.__main__:main',
-              'modiplot=meirlop.motif_distribution_plotting:main'
+              'modiplot=meirlop.motif_distribution_plotting:main',
+              'depp=meirlop.delta_enrichment_positionality_plotting:main''
           ]
       },
       install_requires=[
