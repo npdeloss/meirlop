@@ -46,7 +46,7 @@ setup(name='meirlop',
           'console_scripts':[
               'meirlop=meirlop.__main__:main',
               'modiplot=meirlop.motif_distribution_plotting:main',
-              'depp=meirlop.delta_enrichment_positionality_plotting:main''
+              'depp=meirlop.delta_enrichment_positionality_plotting:main'
           ]
       },
       install_requires=[
