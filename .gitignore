@@ -1,12 +1,15 @@
+# Notebook temporary data
+notebooks/temporary_data
 # Next generation
 meirlop/denovo.py
 # Jupyter
 .ipynb_checkpoints
+*/.ipynb_checkpoints/*
 # JASPAR download
 *_pfms_jaspar.txt
 
 # Sequence files
-*.fa
+# *.fa
 *.fai
 *.fa.gz
 *.fq

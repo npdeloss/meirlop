@@ -1,0 +1,12 @@
+accession_id,source_url,dest_filename,lab_name
+ENCSR000EOT,https://www.encodeproject.org/files/ENCFF156LGK/@@download/ENCFF156LGK.bam,dnase.bam,John Stamatoyannopoulos@UW
+ENCSR000EOT,https://www.encodeproject.org/files/ENCFF821KDJ/@@download/ENCFF821KDJ.bed.gz,dnase.bed.gz,John Stamatoyannopoulos@UW
+ENCSR000AKU,https://www.encodeproject.org/files/ENCFF633WWH/@@download/ENCFF633WWH.bam,h3k4me3_rep1.bam,Bradley Bernstein@Broad
+ENCSR000AKU,https://www.encodeproject.org/files/ENCFF777LZD/@@download/ENCFF777LZD.bam,h3k4me3_rep2.bam,Bradley Bernstein@Broad
+ENCSR000AKS,https://www.encodeproject.org/files/ENCFF778EZR/@@download/ENCFF778EZR.bam,h3k4me1_rep1.bam,Bradley Bernstein@Broad
+ENCSR000AKS,https://www.encodeproject.org/files/ENCFF580LGK/@@download/ENCFF580LGK.bam,h3k4me1_rep2.bam,Bradley Bernstein@Broad
+ENCSR000AKP,https://www.encodeproject.org/files/ENCFF301TVL/@@download/ENCFF301TVL.bam,h3k27ac_rep1.bam,Bradley Bernstein@Broad
+ENCSR000AKP,https://www.encodeproject.org/files/ENCFF879BWC/@@download/ENCFF879BWC.bam,h3k27ac_rep2.bam,Bradley Bernstein@Broad
+ENCSR000AKQ,https://www.encodeproject.org/files/ENCFF190OWE/@@download/ENCFF190OWE.bam,h3k27me3_rep1.bam,Bradley Bernstein@Broad
+ENCSR000AKQ,https://www.encodeproject.org/files/ENCFF692KQZ/@@download/ENCFF692KQZ.bam,h3k27me3_rep2.bam,Bradley Bernstein@Broad
+    
