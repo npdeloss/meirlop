@@ -1,9 +1,6 @@
 # Notebook temporary data
-<<<<<<< HEAD
 notebooks/meirlop_output_directory/motif_peak_set_dict.json
 notebooks/motifs.txt
-=======
->>>>>>> parent of 1ef1496... Added more helpful documentation
 notebooks/temporary_data
 # Next generation
 meirlop/denovo.py

@@ -1,0 +1,21 @@
+WARNING: combining -O with -r or -p will mean that all downloaded content
+will be placed in the single file you specified.
+
+--2020-06-05 12:54:16--  http://jaspar2018.genereg.net/download/CORE/JASPAR2018_CORE_vertebrates_non-redundant_pfms_jaspar.txt
+Resolving jaspar2018.genereg.net (jaspar2018.genereg.net)... 193.60.222.202
+Connecting to jaspar2018.genereg.net (jaspar2018.genereg.net)|193.60.222.202|:80... connected.
+HTTP request sent, awaiting response... 200 OK
+Length: 214260 (209K) [text/plain]
+Saving to: ‘motifs.txt’
+
+     0K .......... .......... .......... .......... .......... 23%  168K 1s
+    50K .......... .......... .......... .......... .......... 47%  290K 1s
+   100K .......... .......... .......... .......... .......... 71% 7.84M 0s
+   150K .......... .......... .......... .......... .......... 95%  359K 0s
+   200K .........                                             100% 2.95M=0.6s
+
+2020-06-05 12:54:17 (338 KB/s) - ‘motifs.txt’ saved [214260/214260]
+
+FINISHED --2020-06-05 12:54:17--
+Total wall clock time: 0.9s
+Downloaded: 1 files, 209K in 0.6s (338 KB/s)
