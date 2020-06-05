@@ -1,1 +1,0 @@
-meirlop --jobs 30 --covariates covariates.tsv --html --sortabs --fa scored_fasta.fa motifs.txt meirlop_output_directory
