@@ -5,7 +5,7 @@ from setuptools.command.test import test as TestCommand
 
 
 
-__version__='0.0.14'
+__version__='0.0.15'
 
 # if sys.argv[-1] == 'publish':
 #     os.system("python setup.py sdist bdist_wheel register upload")

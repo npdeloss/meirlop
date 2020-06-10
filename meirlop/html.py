@@ -175,7 +175,7 @@ def get_html_for_lr_results_df(lr_results_df,
                     'percent_peaks'
                 ]))
     old_width = pd.get_option('display.max_colwidth')
-    pd.set_option('display.max_colwidth', -1)
+    pd.set_option('display.max_colwidth', None)
     # df_html = df.to_html(escape = False)
     df_html = df_style.render(escape = False)
     pd.set_option('display.max_colwidth', old_width)
