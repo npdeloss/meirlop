@@ -90,6 +90,23 @@ def setup_parser(parser):
                                    'Warning: This can take a while.'
                                ))
     
+    parser.add_argument('--nscale', 
+                        metavar = 'norm_scale', 
+                        dest = 'norm_scale', 
+                        type = float, 
+                        default = 1.0, 
+                        help = (
+                            'Set standard deviation '
+                            'of the gaussian distribution '
+                            'whose pdf is used to weight '
+                            'motif positions surrounding '
+                            'a motif neighborhood. '
+                            'Larger values lead to '
+                            '"softer" exclusion '
+                            'of motifs from a neighborhood. '
+                            'Default = 1.0'
+                        ))
+    
     parser.add_argument('--formats', 
                         metavar = 'formats', 
                         dest = 'formats', 
@@ -147,6 +164,7 @@ def run_depp(args):
         motif_id_slugname_df = motif_id_slugname_df, 
         n_top = args.n_top_motifs, 
         plot_all = args.plot_all,
+        norm_scale = args.norm_scale,
         progress_wrapper = tqdm, 
         plot_dpi = args.dpi, 
         figsize = (args.width, args.height), 
@@ -165,6 +183,7 @@ def plot_delta_enrichment_positionality(
     lr_input_df, 
     output_prefix, 
     double_negative = True, 
+    norm_scale = 1.0, 
     figsize = (10, 10), 
     plot_formats = ['svg', 'png'],
     plot_tight = True,
@@ -177,12 +196,13 @@ def plot_delta_enrichment_positionality(
     fig = plt.figure(figsize=figsize)
     ax = fig.add_subplot(111)
     peak_length = scan_results_and_lengths_subset_df['peak_length'].max()
-    num_points = int(np.round(peak_length / 3.0))
-    norm_locs = np.linspace(
-        -peak_length / 2.0,
-        peak_length / 2.0,
-        num_points
-    )
+#     num_points = int(np.round(peak_length / 3.0))
+#     norm_locs = np.linspace(
+#         -peak_length / 2.0,
+#         peak_length / 2.0,
+#         num_points
+#     )
+    norm_locs = np.arange(-peak_length/2.0, peak_length/2.0 + 1, 1.0)
     lr_input_df_subset = [
         lr_input_df['peak_id']
         .isin(list(set(scan_results_and_lengths_subset_df['peak_id'])))
@@ -206,11 +226,7 @@ def plot_delta_enrichment_positionality(
                 'instance_peak_center_distance'
             ],
             loc = norm_loc,
-            scale = (
-                scan_results_and_lengths_subset_df['motif_length']
-                .mean() /
-                2.0
-            )
+            scale = norm_scale
         )
         if double_negative:
             scan_results_and_lengths_subset_df[('norm_pdf', i)] = (
@@ -383,6 +399,7 @@ def plot_delta_enrichment_positionalities(
     n_top = 10,
     plot_all = False,
     double_negative = True,
+    norm_scale = 1.0,
     plot_dpi = 300,
     figsize = (10, 10),
     plot_formats = ['.svg', '.png'],
@@ -439,6 +456,7 @@ def plot_delta_enrichment_positionalities(
             lr_input_df, 
             output_prefix_from_motif_id(motif_id),
             double_negative = double_negative,
+            norm_scale = norm_scale,
             plot_dpi = plot_dpi, 
             figsize = figsize,
             plot_formats = plot_formats

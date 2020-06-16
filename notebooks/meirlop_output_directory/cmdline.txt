@@ -1,1 +1,1 @@
-meirlop --jobs 30 --covariates covariates.tsv --html --sortabs --fa scored_fasta.fa motifs.txt meirlop_output_directory/
+meirlop --jobs 30 --covariates notebooks/covariates.tsv --html --scan --sortabs --fa notebooks/scored_fasta.fa notebooks/motifs.txt notebooks/meirlop_output_directory/
