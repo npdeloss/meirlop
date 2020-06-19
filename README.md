@@ -96,7 +96,7 @@ usage: modiplot [-h] [--jobs jobs]
                 alpha_override] [--pointsize pointsize] [--separate]
                 [--formats formats [formats ...]] [--fwdcolor fwd_color]
                 [--revcolor rev_color] [--width width] [--height height]
-                [--dpi dpi] [--nopickle]
+                [--dpi dpi] [--nopickle] [--depp] [--nscale norm_scale]
                 output_dir
 
 Make a plot of the distribution of a motif within a set of scored sequences (a
@@ -145,43 +145,12 @@ optional arguments:
   --nopickle            Do not store motif distributions in a pickle file.
                         They can take a while to write, but might come in
                         handy in the future.
-```
-
-## DEPP
-```
-usage: depp [-h] [--motifslugs motif_slugs_file | --top [n_top_motifs] |
-            --all] [--formats formats [formats ...]] [--width width]
-            [--height height] [--dpi dpi]
-            output_dir
-
-Make a plot of changes (deltas) of motif enrichment across positions within
-scored sequences (a delta enrichment positionality plot, AKA "DEPP") after
-analysis with meirlop (--scan is required to generate the necessary
-scan_results.tsv).
-
-positional arguments:
-  output_dir            Read the contents of this meirlop output dir and place
-                        plots here.
-
-optional arguments:
-  -h, --help            show this help message and exit
-  --motifslugs motif_slugs_file
-                        A 2-column tab-separated file with two columns,
-                        "motif_id" and "slugname". These column names must be
-                        in the header. This table translates motif IDs
-                        submitted to meirlop into filename-compatible "slugs"
-                        to assign useful filenames to motif plots, and
-                        determines which motifs to plot. Mutually exclusive
-                        with --top.
-  --top [n_top_motifs]  The number of top motif enrichment results from
-                        meirlop lr_results to plot. Mutually exclusive with
-                        --motifslugs. Default = 10
-  --all                 Plot all motifs from lr_results. Warning: This can
-                        take a while.
-  --formats formats [formats ...]
-                        List of output formats for plots. Default: Output
-                        plots in SVG and PNG formats.
-  --width width         Width of figures to output, in inches.
-  --height height       Height of figures to output, in inches.
-  --dpi dpi             DPI of figures to output.
+  --depp                Compute and plot delta enrichment positionality
+                        profiles (DEPPs), which display a form of motif
+                        enrichment as a function of motif position.
+  --nscale norm_scale   When used with --depp, set standard deviation of the
+                        gaussian distribution whose pdf is used to weight
+                        motif positions surrounding a motif neighborhood.
+                        Larger values lead to "softer" exclusion of motifs
+                        from a neighborhood. Default = 1.0
 ```
