@@ -15,11 +15,19 @@ import json
 from tqdm import tqdm
 
 from slugify import slugify
-from .motif_enrichment import dict_to_df
+
 from scipy.stats import gaussian_kde
+from scipy.stats import norm
+
+import statsmodels.api as smapi
+import statsmodels.formula.api as sm
+from statsmodels.stats.multitest import multipletests as mt
 
 from matplotlib.gridspec import GridSpec
 import matplotlib.patches as mpatches
+
+from .motif_enrichment import dict_to_df
+from .motif_enrichment import preprocess_lr_df
 
 # progress_wrapper = tqdm
 
@@ -208,6 +216,35 @@ def setup_parser(parser):
                             'but might come in handy '
                             'in the future.'
                         ))
+    parser.add_argument('--depp', 
+                        dest = 'depp', 
+                        action = 'store_true', 
+                        help = (
+                            'Compute and plot '
+                            'delta enrichment positionality profiles '
+                            '(DEPPs), '
+                            'which display a form of motif enrichment '
+                            'as a function of motif position.'
+                        ))
+    
+    parser.add_argument('--nscale', 
+                        metavar = 'norm_scale', 
+                        dest = 'norm_scale', 
+                        type = float, 
+                        default = 1.0, 
+                        help = (
+                            'When used with --depp, '
+                            'set standard deviation '
+                            'of the gaussian distribution '
+                            'whose pdf is used to weight '
+                            'motif positions surrounding '
+                            'a motif neighborhood. '
+                            'Larger values lead to '
+                            '"softer" exclusion '
+                            'of motifs from a neighborhood. '
+                            'Default = 1.0'
+                        ))
+    
 #     parser.add_argument('--nojson', 
 #                     dest = 'no_json', 
 #                     action = 'store_true', 
@@ -233,10 +270,13 @@ def run_modiplot(args):
     
     (
         figs_by_motif_id_and_orientations_to_plot_parallel, 
-        motif_distributions_by_motif
+        motif_distributions_by_motif, 
+        depps_by_motif
     ) = plot_motif_instances_from_output_dir(
         args.output_dir, 
         motif_id_slugname_df = motif_id_slugname_df, 
+        depp = args.depp,
+        norm_scale = args.norm_scale,
         n_top = args.n_top_motifs, 
         n_jobs = args.jobs, 
         progress_wrapper = tqdm, 
@@ -277,7 +317,6 @@ def run_modiplot(args):
     
     print('Done')
     
-
 def load_meirlop_output_dfs(output_dir):
     outpath_lr_results = os.path.normpath(output_dir + '/lr_results.tsv')
     outpath_lr_input = os.path.normpath(output_dir + '/lr_input.tsv')
@@ -359,35 +398,6 @@ def precompute_motif_dfs(
     sorted_peak_score_rank_df = lr_input_df[['peak_score', 'peak_score_rank_int']].sort_values(by = 'peak_score_rank_int')
     return peak_and_motif_df_by_motif_id, sorted_peak_score_rank_df, max_peak_length, max_peak_score_rank
 
-def two_column_df_to_rolling_mean(df, min_index = None, max_index = None, window = 3, center = True):
-    col1 = df.columns[0]
-    col2 = df.columns[1]
-    if min_index is None:
-        min_index = int(np.floor(df[col1].min()))
-    if max_index is None:
-        max_index = int(np.ceil(df[col1].max()))
-    rolling_mean_df = (
-        df[[col1, col2]]
-        .groupby(col1)
-        .count()
-        .reset_index()
-        .merge(
-        pd.DataFrame(
-            {col1 : 
-             list(range(min_index, max_index + 1))
-            }), 
-        how = 'outer')
-        .fillna(0.0)
-        .sort_values(by = col1)
-        .set_index(col1)
-        .rolling(window, center = center)
-        .mean()
-        .dropna()
-        .reset_index()
-    )
-    rolling_mean_df[col1]
-    return rolling_mean_df
-
 def compute_motif_distributions(
     peak_and_motif_df, 
     max_peak_length, 
@@ -440,11 +450,177 @@ def compute_motif_distributions(
     
     return peak_and_motif_df_by_orientation, rolling_mean_on_motif_position_by_orientation, motif_rank_kde_by_orientation
 
+def two_column_df_to_rolling_mean(df, min_index = None, max_index = None, window = 3, center = True):
+    col1 = df.columns[0]
+    col2 = df.columns[1]
+    if min_index is None:
+        min_index = int(np.floor(df[col1].min()))
+    if max_index is None:
+        max_index = int(np.ceil(df[col1].max()))
+    rolling_mean_df = (
+        df[[col1, col2]]
+        .groupby(col1)
+        .count()
+        .reset_index()
+        .merge(
+        pd.DataFrame(
+            {col1 : 
+             list(range(min_index, max_index + 1))
+            }), 
+        how = 'outer')
+        .fillna(0.0)
+        .sort_values(by = col1)
+        .set_index(col1)
+        .rolling(window, center = center)
+        .mean()
+        .dropna()
+        .reset_index()
+    )
+    rolling_mean_df[col1]
+    return rolling_mean_df
+
+def compute_delta_enrichment_positional_profile(
+    peak_and_motif_df, 
+    lr_input_df, 
+    max_peak_length, 
+    norm_scale = 1.0,
+    double_negative = True
+):
+    peak_and_motif_df_cp = peak_and_motif_df.copy()
+    norm_locs = np.arange(-max_peak_length/2.0, max_peak_length/2.0 + 1, 1.0)
+    lr_input_df_subset = lr_input_df[
+        lr_input_df['peak_id']
+        .isin(list(set(peak_and_motif_df['peak_id'])))
+    ]
+    
+    preprocessed_lr_df = (
+        preprocess_lr_df(
+            lr_input_df_subset[
+                lr_input_df_subset.columns[:2]
+            ],
+            lr_input_df_subset[
+                [lr_input_df_subset.columns[0]] + 
+                list(lr_input_df_subset.columns[2:])
+            ]
+        )
+    )
+    norm_loc_columns = []
+    for i, norm_loc in enumerate(norm_locs):
+        peak_and_motif_df_cp[('norm_pdf', i)] = norm.pdf(
+            peak_and_motif_df_cp[
+                'instance_position_center'
+            ],
+            loc = norm_loc,
+            scale = norm_scale
+        )
+        if double_negative:
+            peak_and_motif_df_cp[('norm_pdf', i)] = (
+                1.0 - peak_and_motif_df_cp[('norm_pdf', i)]
+            )
+        norm_loc_columns.append(('norm_pdf', i))
+
+    motif_peak_id_norm_pdf_df = peak_and_motif_df_cp[['peak_id', 'motif_orientation'] + norm_loc_columns].groupby(['peak_id', 'motif_orientation']).max().reset_index()
+
+    lr_df = (
+        motif_peak_id_norm_pdf_df
+        .merge(preprocessed_lr_df, how = 'left')
+        .fillna(0.0)
+    )
+
+    lr_df_gb_motif_orientation = lr_df.groupby('motif_orientation')
+    motif_orientations = list(lr_df_gb_motif_orientation.groups.keys())
+    indep_var_cols = list(preprocessed_lr_df.columns[1:])
+    score_colname = indep_var_cols[0]
+    lr_results = []
+
+    for motif_orientation in motif_orientations:
+        lr_df_subset = lr_df_gb_motif_orientation.get_group(motif_orientation)
+        for i, norm_loc in enumerate(norm_locs):
+            y = lr_df_subset[('norm_pdf', i)]
+            X = lr_df_subset[indep_var_cols]
+            model = smapi.OLS(y, X)
+            result = model.fit(disp=0)
+            coef = result.params[score_colname]
+            std_err = result.bse[score_colname]
+            pval = result.pvalues[score_colname]
+            ci = result.conf_int()
+            (
+                ci_95_pct_lower,
+                ci_95_pct_upper
+            ) = (
+                ci[0][score_colname],
+                ci[1][score_colname]
+            )
+
+            # y_score = result.predict(X.values)
+            result_tup = (
+                motif_orientation,
+                norm_loc,
+                coef,
+                std_err,
+                ci_95_pct_lower,
+                ci_95_pct_upper,
+                pval,
+                result
+            )
+            lr_results.append(result_tup)
+    positional_enrichment_results_df = pd.DataFrame(
+        [tup[:-1] for tup in lr_results], 
+        columns = [
+            'Motif Orientation',
+            'Motif Position',
+            'Positional Enrichment Coefficient',
+            'Standard Error',
+            '95% CI Upper',
+            '95% CI Lower',
+            'P-value'
+    ])
+
+    if double_negative:
+        positional_enrichment_results_df[
+            'Positional Enrichment Coefficient'
+        ] = (
+            0.0 -
+            positional_enrichment_results_df[
+                'Positional Enrichment Coefficient'
+            ]
+        )
+        positional_enrichment_results_df['95% CI Upper'] = (
+            0.0 - positional_enrichment_results_df['95% CI Upper']
+        )
+        positional_enrichment_results_df['95% CI Lower'] = (
+            0.0 - positional_enrichment_results_df['95% CI Lower']
+        )
+    else:
+        original_columns = list(positional_enrichment_results_df.columns)
+        positional_enrichment_results_df = (
+            positional_enrichment_results_df.rename(columns = {
+                '95% CI Upper': '95% CI Lower',
+                '95% CI Lower': '95% CI Upper'
+            })
+        )
+        positional_enrichment_results_df = (
+            positional_enrichment_results_df[original_columns]
+        )
+
+    positional_enrichment_results_df['Adjusted P-value'] = mt(
+        positional_enrichment_results_df['P-value'],
+        method = 'fdr_bh'
+    )[1]
+    positional_enrichment_results_df_gb_orientation = positional_enrichment_results_df.groupby('Motif Orientation')
+    positional_enrichment_results_df_by_orientation = {
+        motif_orientation: positional_enrichment_results_df_gb_orientation.get_group(motif_orientation)
+        for motif_orientation
+        in motif_orientations
+    }
+    return positional_enrichment_results_df_by_orientation
+
 def plot_motif_instances_single(
     peak_and_motif_df_by_orientation, 
     rolling_mean_on_motif_position_by_orientation, 
     motif_rank_kde_by_orientation, 
     sorted_peak_score_rank_df, 
+    depp_by_orientation = None,
     title = 'Plot of motif locations in ranked peaks', 
     filename = 'motif_instances_plot', 
     orientations_to_plot = ['+', '-'], 
@@ -453,21 +629,23 @@ def plot_motif_instances_single(
     pointsize = 2.0, 
     alpha_factor = 4.0, 
     alpha_override = None, 
-    plot_formats = ['svg', 'ps', 'png'],
+    plot_formats = ['svg', 'png'],
     plot_tight = True,
     plot_dpi = 300, 
     close_fig = True
 ):
     if alpha_override == None:
-        alpha = np.min([np.max([alpha_factor/df['motif_count'].max() for df in rolling_mean_on_motif_position_by_orientation.values()]), 1.0])
-        alpha = np.max([alpha, 1.0/256.0])
+            alpha = np.min([np.max([alpha_factor/df['motif_count'].max() for df in rolling_mean_on_motif_position_by_orientation.values()]), 1.0])
+            alpha = np.max([alpha, 1.0/256.0])
     else:
         alpha = alpha_override
-    
+
+    depp = depp_by_orientation != None
+
     if plot_tight:
         plt.tight_layout()
     fig = plt.figure(figsize = figsize)
-    gs = GridSpec(ncols=5,nrows=4, figure = fig)
+    gs = GridSpec(ncols=5,nrows=5, figure = fig) if depp else GridSpec(ncols=5,nrows=4, figure = fig)
     ax_score_rank = fig.add_subplot(gs[1:4,0])
     ax_rank = fig.add_subplot(gs[1:4,4])
     ax_motifs = fig.add_subplot(gs[1:4,1:4])
@@ -482,7 +660,13 @@ def plot_motif_instances_single(
     ax_score_rank.set_xlabel('Peak Score')
     ax_motifs.set_yticklabels([])
     ax_rank.set_yticklabels([])
-    
+
+    if depp:
+        ax_depp = fig.add_subplot(gs[4,1:4])
+        ax_motifs.get_shared_x_axes().join(ax_motifs, ax_depp)
+        ax_depp.set_ylabel('\n'.join('Positional Enrichment Coefficient'.split()))
+        ax_depp.set_xlabel('Motif Position')
+
     fig.suptitle(title)
     ax_score_rank.plot(sorted_peak_score_rank_df['peak_score'], sorted_peak_score_rank_df['peak_score_rank_int'], color = 'black')
     for orientation, df in rolling_mean_on_motif_position_by_orientation.items():
@@ -491,6 +675,23 @@ def plot_motif_instances_single(
     for orientation, df in motif_rank_kde_by_orientation.items():
         if orientation in orientations_to_plot:
             ax_rank.plot(df['motif_density'], df['peak_score_rank_int'], '-', color = color_by_orientation[orientation])
+    if depp:
+        for orientation in orientations_to_plot:
+            df = depp_by_orientation[orientation]
+            ax_depp.plot(
+                df['Motif Position'], 
+                df['Positional Enrichment Coefficient'], 
+                '-', 
+                color = color_by_orientation[orientation]
+            )
+            ax_depp.fill_between(
+                df['Motif Position'], 
+                df['95% CI Lower'], 
+                df['95% CI Upper'], 
+                facecolor=color_by_orientation[orientation], 
+                alpha=0.25
+            )
+
     for tick in ax_rank.get_xticklabels():
         tick.set_rotation(45)
     handles = []
@@ -514,7 +715,6 @@ def plot_motif_instances_single(
         loc = 'lower left', 
         title = 'Orientation'
     )
-
     
     if plot_tight:
         bbox_inches = 'tight'
@@ -531,8 +731,6 @@ def plot_motif_instances_single(
         return os.path.normpath(f'{filename}.{fmt}')
     
     return fig
-    
-    
 
 orientations_to_filename_substr = lambda orientations: {
     ('+','-'): 'both', 
@@ -548,6 +746,7 @@ def plot_motif_instances_multiple(
     motif_distributions_by_motif, 
     sorted_peak_score_rank_df, 
     motif_id_slugname_df, 
+    depps_by_motif = None,
     motif_ids = None, 
     figsize = (12.5, 10.0), 
     pointsize = 2.0, 
@@ -555,7 +754,7 @@ def plot_motif_instances_multiple(
     alpha_override = None,
     title_func = default_title_func,
     filename_func = default_filename_func, 
-    plot_formats = ['svg', 'ps', 'png'],
+    plot_formats = ['svg', 'png'],
     color_by_orientation = {'+': 'red', '-': 'blue'}, 
     progress_wrapper = tqdm, 
     plot_fwd = True, 
@@ -568,6 +767,8 @@ def plot_motif_instances_multiple(
 ):
     if motif_ids == None:
         motif_ids = motif_id_slugname_df['motif_id']
+    
+    depp = depps_by_motif != None
     
     orientations_to_plot = []
     if plot_fwd: 
@@ -598,13 +799,15 @@ def plot_motif_instances_multiple(
         motif_rank_kde_by_orientation, 
         title, 
         filename, 
-        orientations_to_plot 
+        orientations_to_plot, 
+        depp_by_orientation
     ):
         fig = plot_motif_instances_single(
             peak_and_motif_df_by_orientation = peak_and_motif_df_by_orientation, 
             rolling_mean_on_motif_position_by_orientation = rolling_mean_on_motif_position_by_orientation, 
             motif_rank_kde_by_orientation = motif_rank_kde_by_orientation, 
             sorted_peak_score_rank_df = sorted_peak_score_rank_df, 
+            depp_by_orientation = depp_by_orientation, 
             title = title, 
             filename = filename, 
             orientations_to_plot = orientations_to_plot, 
@@ -637,6 +840,10 @@ def plot_motif_instances_multiple(
             filename, 
             orientations_to_plot
         )
+        if depp:
+            tup = tup + (depps_by_motif[motif_id],)
+        else:
+            tup = tup + (None,)
         return tup
     
     wrap_plot_args_dict = {
@@ -676,6 +883,8 @@ def plot_motif_instances_from_output_dir(
     n_top = 10, 
     motif_count_smooth_window = 3, 
     num_kde_points = 1000, 
+    depp = True,
+    norm_scale = 1.0,
     progress_wrapper = tqdm, 
     **kwargs
 ):
@@ -722,17 +931,51 @@ def plot_motif_instances_from_output_dir(
         in progress_wrapper(peak_and_motif_df_by_motif_id.items())
     }
     
+    if depp:
+        print('Computing delta enrichment positional profiles of motifs')
+        depps_by_motif = {
+            motif_id: compute_delta_enrichment_positional_profile(
+                peak_and_motif_df, 
+                lr_input_df,
+                max_peak_length, 
+                norm_scale,
+                )
+            for motif_id, peak_and_motif_df 
+            in progress_wrapper(peak_and_motif_df_by_motif_id.items())
+        }
+    else:
+        depps_by_motif = None
+    
     print('Generating figures')
-    figs_by_motif_id_and_orientations_to_plot_parallel = plot_motif_instances_multiple(
+    motif_id_to_coef = lr_results_df.set_index('motif_id')['coef'].to_dict()
+    motif_id_to_pval = lr_results_df.set_index('motif_id')['pval'].to_dict()
+    motif_id_to_padj = lr_results_df.set_index('motif_id')['padj'].to_dict()
+    motif_id_to_stats_str = lambda motif_id: '\n'.join([
+        f'Enrichment coefficient: {motif_id_to_coef[motif_id]:0.4e}',
+        f'P-value: {motif_id_to_pval[motif_id]:0.4e}',
+        f'Adjusted P-value: {motif_id_to_padj[motif_id]:0.4e}'
+    ])
+    title_func = lambda motif_id, orientations: default_title_func(motif_id, orientations) + '\n' + motif_id_to_stats_str(motif_id)
+    filename_func = lambda motif_id_slugname, orientations: f'{output_dir}/'+default_filename_func(motif_id_slugname, orientations)
+    figs_by_motif_id_and_orientations_to_plot = plot_motif_instances_multiple(
         motif_distributions_by_motif, 
         sorted_peak_score_rank_df, 
         motif_id_slugname_df, 
-        filename_func = lambda motif_id_slugname, orientations: f'{output_dir}/'+default_filename_func(motif_id_slugname, orientations), 
+        depps_by_motif = depps_by_motif,
+        title_func = title_func,
+        filename_func = filename_func, 
         progress_wrapper = progress_wrapper, 
         **kwargs
     )
-    return figs_by_motif_id_and_orientations_to_plot_parallel, motif_distributions_by_motif
+    
+    if depp:
+        motif_id_to_slugname = motif_id_slugname_df.set_index('motif_id')['slugname'].to_dict()
+        for motif_id, depp_by_orientation in depps_by_motif.items():
+            for orientation, depp_df in depp_by_orientation.items():
+                depp_filename = filename_func(motif_id_to_slugname[motif_id], (orientation,)) + '.depp.tsv'
+                depp_df.to_csv(depp_filename, sep = '\t', index = False)
+    
+    return figs_by_motif_id_and_orientations_to_plot, motif_distributions_by_motif, depps_by_motif
 
 if __name__ == '__main__':
     main()
-    
