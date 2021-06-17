@@ -27,7 +27,7 @@ def get_scored_sequences(bed_file,
                       in open(bed_bt
                               .sequence(fi = reference_fa_bt, 
                                         tab = True, s = True, 
-                                        name = True)
+                                        nameOnly = True)
                               .seqfn).readlines()]
     sequence_dict = {('('.join(line
                                .strip()
